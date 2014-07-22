@@ -95,6 +95,19 @@ Displaying usage
 To display usage, you can use the `adopt_usage_fprint` function,
 which prints the usage information to the given file stream.
 
+Inclusion in your product
+-------------------------
+If you loathe additional namespaces, and want to use adopt inside your
+product without using the `adopt_` prefix, you can use the included
+`rename.pl` script to give the functions and structs your own prefix.
+
+For example:
+
+    % ./rename.pl ed_opt
+
+Will product `ed_opt.c` and `ed_opt.h` that can be included in an
+application.
+
 About Adopt
 -----------
 Adopt was written by Edward Thomson <ethomson@edwardthomson.com>

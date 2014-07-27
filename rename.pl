@@ -2,33 +2,100 @@
 
 use strict;
 
-die "usage: $0 <prefix>\n" if ($#ARGV < 0);
+my $tests = 0;
+my $out = '.';
+my($prefix, $filename, $out_tests, $inline, $include, $tests_name);
 
-my $prefix = $ARGV[0];
+sub die_usage() { die "usage: $0 [--out=<dir>] [--filename=<name>] [--out-tests=<dir>] [--with-tests=<testname>] [--include=<include>] [--inline=<inline_func>] <prefix>\n"; }
+
+while (my $arg = shift @ARGV) {
+	if ($arg =~ /^--with-tests/) {
+		$tests = 1;
+
+		if ($arg =~ s/^--with-tests=//) {
+			$tests_name = $arg;
+		}
+	}
+	elsif ($arg =~ s/^--out=//) {
+		$out = $arg;
+	}
+	elsif ($arg =~ s/^--filename=//) {
+		$filename = $arg;
+	}
+	elsif ($arg =~ s/^--out-tests=//) {
+		$out_tests = $arg;
+	}
+	elsif ($arg =~ s/^--include=//) {
+		$include = $arg;
+	}
+	elsif ($arg =~ s/^--inline=//) {
+		$inline = $arg;
+	}
+	elsif ($arg !~ /^--/ && ! $prefix) {
+		$prefix = $arg;
+	}
+	else {
+		print STDERR "$0: unknown argument: $arg\n";
+		die_usage();
+	}
+}
+
+die_usage() unless $prefix;
+
+$filename = $prefix unless($prefix);
+
 my $prefix_upper = $prefix;
 $prefix_upper =~ tr/a-z/A-Z/;
 
-translate("adopt.c", "${prefix}.c");
-translate("adopt.h", "${prefix}.h");
+translate("adopt.c", "${out}/${filename}.c");
+translate("adopt.h", "${out}/${filename}.h");
+
+if ($tests)
+{
+	$out_tests = $out unless($out_tests);
+
+	if ($tests_name) {
+		$tests_name =~ s/::/_/g;
+	} else {
+		$tests_name = $prefix;
+	}
+
+	my $tests_filename = $tests_name;
+	$tests_filename =~ s/.*_//;
+
+	translate("tests/adopt.c", "${out_tests}/${tests_filename}.c");
+}
 
 sub translate {
 	my($in, $out) = @_;
 
 	open(IN, $in) || die "$0: could not open ${in}: $!\n";
-	open(OUT, '>' . $out) || die "$0: could not open ${out}: $!\n";
+	my $contents = join('', <IN>);
+	close(IN);
 
-	while(<IN>) {
-		# if a prefix becomes foo_opt, we want to rewrite adopt_opt specially
-		# to avoid it becoming foo_opt_opt
-		s/adopt_opt/${prefix}/g if ($prefix =~ /_opt$/);
+	# if a prefix becomes foo_opt, we want to rewrite adopt_opt specially
+	# to avoid it becoming foo_opt_opt
+	$contents =~ s/adopt_opt/${prefix}/g if ($prefix =~ /_opt$/);
 
-		s/adopt_/${prefix}_/g;
-		s/ADOPT_/${prefix_upper}_/g;
+	$contents =~ s/adopt_/${prefix}_/g;
+	$contents =~ s/ADOPT_/${prefix_upper}_/g;
+	$contents =~ s/adopt\.h/${filename}\.h/g;
 
-		print OUT;
+	if ($include) {
+		$contents =~ s/^(#include "opt.h")$/#include "${include}"\n$1/mg;
 	}
 
-	close(IN);
+	if ($inline) {
+		$contents =~ s/^INLINE/${inline}/mg;
+		$contents =~ s/\n#ifdef _MSC_VER\n.*\n#endif\n//sg;
+	}
+
+	if ($tests) {
+		$contents =~ s/test_adopt__/test_${tests_name}__/g;
+	}
+
+	open(OUT, '>' . $out) || die "$0: could not open ${out}: $!\n";
+	print OUT $contents;
 	close(OUT);
 }
 

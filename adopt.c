@@ -36,6 +36,7 @@ INLINE(const adopt_spec *) spec_byname(
 			return spec;
 
 		if ((spec->type == ADOPT_SWITCH || spec->type == ADOPT_VALUE) &&
+			spec->name &&
 			strlen(spec->name) == namelen &&
 			strncmp(name, spec->name, namelen) == 0)
 			return spec;

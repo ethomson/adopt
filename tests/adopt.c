@@ -395,3 +395,22 @@ void test_adopt__internal_literal(void)
 	/* Parse --foo -- --bar */
 	test_parse(specs, args1, 3, expected1, 3);
 }
+
+void test_adopt__no_long_argument(void)
+{
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, NULL, 's' },
+		{ ADOPT_SWITCH, "long", 0 },
+		{ 0 },
+	};
+
+	const char *args1[] = { "-s", "--long" };
+	adopt_opt expected1[] = {
+		{ &specs[0], NULL },
+		{ &specs[1], NULL },
+	};
+
+	/* Parse -z */
+	test_parse(specs, args1, 2, expected1, 2);
+}
+

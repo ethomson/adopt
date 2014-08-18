@@ -6,7 +6,10 @@ my $tests = 0;
 my $out = '.';
 my($prefix, $filename, $out_tests, $inline, $include, $tests_name);
 
-sub die_usage() { die "usage: $0 [--out=<dir>] [--filename=<name>] [--out-tests=<dir>] [--with-tests=<testname>] [--include=<include>] [--inline=<inline_func>] <prefix>\n"; }
+my $usage = "usage: $0 [--out=<dir>] [--filename=<name>] [--out-tests=<dir>] [--with-tests=<testname>] [--include=<include>] [--inline=<inline_func>] <prefix>\n";
+
+sub die_usage() { die $usage; }
+
 
 while (my $arg = shift @ARGV) {
 	if ($arg =~ /^--with-tests/) {
@@ -33,6 +36,10 @@ while (my $arg = shift @ARGV) {
 	}
 	elsif ($arg !~ /^--/ && ! $prefix) {
 		$prefix = $arg;
+	}
+	elsif ($arg eq '--help') {
+		print STDOUT $usage;
+		exit;
 	}
 	else {
 		print STDERR "$0: unknown argument: $arg\n";

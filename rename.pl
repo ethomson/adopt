@@ -4,9 +4,9 @@ use strict;
 
 my $tests = 0;
 my $out = '.';
-my($prefix, $filename, $out_tests, $inline, $include, $tests_name);
+my($prefix, $filename, $out_tests, $inline, $include, $tests_name, $no_usage);
 
-my $usage = "usage: $0 [--out=<dir>] [--filename=<name>] [--out-tests=<dir>] [--with-tests=<testname>] [--include=<include>] [--inline=<inline_func>] <prefix>\n";
+my $usage = "usage: $0 [--out=<dir>] [--filename=<name>] [--out-tests=<dir>] [--with-tests=<testname>] [--without-usage] [--include=<include>] [--inline=<inline_func>] <prefix>\n";
 
 sub die_usage() { die $usage; }
 
@@ -37,6 +37,9 @@ while (my $arg = shift @ARGV) {
 	elsif ($arg !~ /^--/ && ! $prefix) {
 		$prefix = $arg;
 	}
+	elsif ($arg eq '--without-usage') {
+		$no_usage = 1;
+	}
 	elsif ($arg eq '--help') {
 		print STDOUT $usage;
 		exit;
@@ -49,7 +52,7 @@ while (my $arg = shift @ARGV) {
 
 die_usage() unless $prefix;
 
-$filename = $prefix unless($prefix);
+$filename = $prefix unless($filename);
 
 my $prefix_upper = $prefix;
 $prefix_upper =~ tr/a-z/A-Z/;
@@ -79,6 +82,9 @@ sub translate {
 	open(IN, $in) || die "$0: could not open ${in}: $!\n";
 	my $contents = join('', <IN>);
 	close(IN);
+
+	$contents =~ s/\nint adopt_usage_fprint.*}\n//s
+	 if ($no_usage);
 
 	# if a prefix becomes foo_opt, we want to rewrite adopt_opt specially
 	# to avoid it becoming foo_opt_opt

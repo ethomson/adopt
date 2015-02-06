@@ -54,6 +54,9 @@ die_usage() unless $prefix;
 
 $filename = $prefix unless($filename);
 
+my $filename_upper = $filename;
+$filename_upper =~ tr/a-z/A-Z/;
+
 my $prefix_upper = $prefix;
 $prefix_upper =~ tr/a-z/A-Z/;
 
@@ -83,16 +86,24 @@ sub translate {
 	my $contents = join('', <IN>);
 	close(IN);
 
+	$contents =~ s/\n\/\*\*\n( \*[^\n]*\n)* \*\/\nint adopt_usage_fprint\(.*?\);\n//s
+	 if ($no_usage);
 	$contents =~ s/\nint adopt_usage_fprint.*}\n//s
 	 if ($no_usage);
+
+	$contents =~ s/test_adopt__/test_${filename}__/g;
 
 	# if a prefix becomes foo_opt, we want to rewrite adopt_opt specially
 	# to avoid it becoming foo_opt_opt
 	$contents =~ s/adopt_opt/${prefix}/g if ($prefix =~ /_opt$/);
 
+	$contents =~ s/ifndef ADOPT_H/ifndef ${filename_upper}_H/g;
+	$contents =~ s/define ADOPT_H/define ${filename_upper}_H/g;
+	$contents =~ s/endif \/\* ADOPT_H/endif \/* ${filename_upper}_H/g;
+	$contents =~ s/adopt\.h/${filename}\.h/g;
+
 	$contents =~ s/adopt_/${prefix}_/g;
 	$contents =~ s/ADOPT_/${prefix_upper}_/g;
-	$contents =~ s/adopt\.h/${filename}\.h/g;
 
 	if ($include) {
 		$contents =~ s/^(#include "opt.h")$/#include "${include}"\n$1/mg;

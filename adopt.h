@@ -10,6 +10,7 @@
 #define ADOPT_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 /**
  * The type of argument to be parsed.
@@ -17,7 +18,17 @@
 typedef enum {
 	ADOPT_NONE = 0,
 
-	/** An argument that is specified ("--help" or "--debug") */
+	/**
+	 * An argument that, when specified, sets a given value to true.
+	 * This is useful for arguments like "--debug".  The `value` pointer
+	 * in the returned option will be set to `1` when this is set.
+	 */
+	ADOPT_BOOL,
+
+	/**
+	 * An argument that, when specified, sets the given `value_ptr`
+	 * to the given `value`.
+	 */
 	ADOPT_SWITCH,
 
 	/** An argument that has a value ("--name value" or "-n value") */
@@ -62,12 +73,37 @@ typedef struct adopt_spec {
 	/** The alias is the short (one-character) option alias. */
 	const char alias;
 
-	/** The name of the value, provided when creating usage information. */
-	const char *value;
+	/**
+	 * If this spec is of type `ADOPT_VALUE`, this is a pointer to
+	 * a `char *`, that will be set to the value specified on the
+	 * command line.
+	 *
+	 * If this spec is of type `ADOPT_BOOL`, this is a pointer to
+	 * an `int` that will be set to `1` if the option is specified.
+	 *
+	 * If this spec is of type `ADOPT_SWITCH`, this is a pointer to
+	 * an `int` that will be set to the opt's `value` (below) when
+	 * this option is specified.
+	 */
+	void *value;
+
+	/**
+	 * If this spec is of type `ADOPT_SWITCH`, this is the value to
+	 * set in the option's `value_ptr` pointer when it is specified.
+	 * This is ignored for other opt types.
+	 */
+	int switch_value;
+
+	/**
+	 * The name of the value, provided when creating usage information.
+	 * This is required only for the functions that display usage
+	 * information and only when a spec is of type `ADOPT_VALUE`.
+	 */
+	const char *value_name;
 
 	/**
 	 * Short description of the option, used when creating usage
-	 * information.
+	 * information.  This is only used when creating usage information.
 	 */
 	const char *help;
 
@@ -86,18 +122,21 @@ typedef struct adopt_opt {
 	const adopt_spec *spec;
 
 	/**
+	 * The argument as it was specified on the command-line, including
+	 * dashes, eg, `-f` or `--foo`.
+	 */
+	const char *arg;
+
+	/**
 	 * The value provided to the argument, or `NULL` if the given
 	 * argument is a switch argument that does not take a value.
 	 * If the argument did not match and `adopt_spec`, this will
 	 * point to the unknown argument.
 	 */
-	const char *value;
+	const void *value;
 } adopt_opt;
 
-/**
- * The adopt_parser structure.  Callers should not modify these values
- * directory.
- */
+/* The internal parser state.  Callers should not modify this structure. */
 typedef struct adopt_parser {
 	const adopt_spec *specs;
 	const char **args;
@@ -106,7 +145,7 @@ typedef struct adopt_parser {
 	size_t idx;
 	size_t arg_idx;
 	int in_literal : 1,
-		in_short : 1;
+	in_short : 1;
 } adopt_parser;
 
 /**

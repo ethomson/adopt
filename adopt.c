@@ -26,6 +26,11 @@
 # define INLINE(type) static inline type
 #endif
 
+#define spec_is_named_type(x) \
+	((x)->type == ADOPT_BOOL || \
+	 (x)->type == ADOPT_SWITCH || \
+	 (x)->type == ADOPT_VALUE)
+
 INLINE(const adopt_spec *) spec_byname(
 	adopt_parser *parser, const char *name, size_t namelen)
 {
@@ -35,7 +40,7 @@ INLINE(const adopt_spec *) spec_byname(
 		if (spec->type == ADOPT_LITERAL && namelen == 0)
 			return spec;
 
-		if ((spec->type == ADOPT_SWITCH || spec->type == ADOPT_VALUE) &&
+		if (spec_is_named_type(spec) &&
 			spec->name &&
 			strlen(spec->name) == namelen &&
 			strncmp(name, spec->name, namelen) == 0)
@@ -50,8 +55,7 @@ INLINE(const adopt_spec *) spec_byalias(adopt_parser *parser, char alias)
 	const adopt_spec *spec;
 
 	for (spec = parser->specs; spec->type; ++spec) {
-		if ((spec->type == ADOPT_SWITCH || spec->type == ADOPT_VALUE) &&
-			alias == spec->alias)
+		if (spec_is_named_type(spec) && alias == spec->alias)
 			return spec;
 	}
 
@@ -85,19 +89,24 @@ static void parse_long(adopt_opt *opt, adopt_parser *parser)
 
 	namelen = (eql = strrchr(arg, '=')) ? (size_t)(eql - name) : strlen(name);
 
+	opt->arg = arg;
+
 	if ((spec = spec_byname(parser, name, namelen)) == NULL) {
 		opt->spec = NULL;
-		opt->value = arg;
-
 		return;
 	}
 
 	opt->spec = spec;
 
 	/* Future options parsed as literal */
-	if (spec->type == ADOPT_LITERAL) {
+	if (spec->type == ADOPT_LITERAL)
 		parser->in_literal = 1;
-	}
+
+	if (spec->type == ADOPT_BOOL && spec->value)
+		*((int *)spec->value) = 1;
+
+	if (spec->type == ADOPT_SWITCH && spec->value)
+		*((int *)spec->value) = spec->switch_value;
 
 	/* Parse values as "--foo=bar" or "--foo bar" */
 	if (spec->type == ADOPT_VALUE) {
@@ -105,6 +114,9 @@ static void parse_long(adopt_opt *opt, adopt_parser *parser)
 			opt->value = eql + 1;
 		else if ((parser->idx + 1) <= parser->args_len)
 			opt->value = parser->args[parser->idx++];
+
+		if (spec->value)
+			*((char **)spec->value) = (char *)opt->value;
 	}
 }
 
@@ -113,14 +125,21 @@ static void parse_short(adopt_opt *opt, adopt_parser *parser)
 	const adopt_spec *spec;
 	const char *arg = parser->args[parser->idx++], alias = *(arg + 1);
 
+	opt->arg = arg;
+
 	if ((spec = spec_byalias(parser, alias)) == NULL) {
 		opt->spec = NULL;
-		opt->value = arg;
 
 		return;
 	}
 
 	opt->spec = spec;
+
+	if (spec->type == ADOPT_BOOL && spec->value)
+		*((int *)spec->value) = 1;
+
+	if (spec->type == ADOPT_SWITCH && spec->value)
+		*((int *)spec->value) = spec->switch_value;
 
 	/* Parse values as "-ifoo" or "-i foo" */
 	if (spec->type == ADOPT_VALUE) {
@@ -128,13 +147,24 @@ static void parse_short(adopt_opt *opt, adopt_parser *parser)
 			opt->value = arg + 2;
 		else if ((parser->idx + 1) <= parser->args_len)
 			opt->value = parser->args[parser->idx++];
+
+		if (spec->value)
+			*((char **)spec->value) = (char *)opt->value;
 	}
 }
 
 static void parse_arg(adopt_opt *opt, adopt_parser *parser)
 {
-	opt->spec = spec_nextarg(parser);
-	opt->value = parser->args[parser->idx++];
+	const adopt_spec *spec = spec_nextarg(parser);
+
+	opt->spec = spec;
+	opt->arg = parser->args[parser->idx++];
+
+	if (spec && spec->value)
+		*((char **)spec->value) = (char *)opt->arg;
+
+	opt->status = spec ? ADOPT_STATUS_OK : ADOPT_STATUS_UNKNOWN_OPTION;
+	return opt->status;
 }
 
 void adopt_parser_init(
@@ -184,43 +214,56 @@ int adopt_usage_fprint(
 	const adopt_spec specs[])
 {
 	const adopt_spec *spec;
+	int choice = 0;
 	int error;
 
 	if ((error = fprintf(file, "usage: %s", command)) < 0)
 		goto done;
 
 	for (spec = specs; spec->type; ++spec) {
-		int required = (spec->usage & ADOPT_USAGE_REQUIRED);
+		int optional = !(spec->usage & ADOPT_USAGE_REQUIRED);
 		int value_required = (spec->usage & ADOPT_USAGE_VALUE_REQUIRED);
 
 		if (spec->usage & ADOPT_USAGE_HIDDEN)
 			continue;
 
-		if ((error = fprintf(file, " ")) < 0)
+		if (spec->type == ADOPT_LITERAL)
+			optional = 0;
+
+		if (choice)
+			error = fprintf(file, "|");
+		else
+			error = fprintf(file, " ");
+
+		if (error < 0)
+			goto done;
+
+		if (optional && !choice && (error = fprintf(file, "[")) < 0)
 			goto done;
 
 		if (spec->type == ADOPT_VALUE && value_required && spec->alias)
-			error = fprintf(file, "[-%c <%s>]", spec->alias, spec->value);
+			error = fprintf(file, "-%c <%s>", spec->alias, spec->value_name);
 		else if (spec->type == ADOPT_VALUE && value_required)
-			error = fprintf(file, "[--%s=<%s>]", spec->name, spec->value);
+			error = fprintf(file, "--%s=<%s>", spec->name, spec->value_name);
 		else if (spec->type == ADOPT_VALUE)
-			error = fprintf(file, "[--%s[=<%s>]]", spec->name, spec->value);
-		else if (spec->type == ADOPT_ARG && required)
-			error = fprintf(file, "<%s>", spec->name);
+			error = fprintf(file, "--%s[=<%s>]", spec->name, spec->value_name);
 		else if (spec->type == ADOPT_ARG)
-			error = fprintf(file, "[<%s>]", spec->name);
-		else if (spec->type == ADOPT_ARGS && required)
-			error = fprintf(file, "<%s...>", spec->name);
+			error = fprintf(file, "<%s>", spec->value_name);
 		else if (spec->type == ADOPT_ARGS)
-			error = fprintf(file, "[<%s...>]", spec->name);
+			error = fprintf(file, "<%s...>", spec->value_name);
 		else if (spec->type == ADOPT_LITERAL)
 			error = fprintf(file, "--");
 		else if (spec->alias)
-			error = fprintf(file, "[-%c]", spec->alias);
+			error = fprintf(file, "-%c", spec->alias);
 		else
-			error = fprintf(file, "[--%s]", spec->name);
+			error = fprintf(file, "--%s", spec->name);
 
 		if (error < 0)
+			goto done;
+
+		choice = !!((spec+1)->usage & ADOPT_USAGE_CHOICE);
+
+		if (optional && !choice && (error = fprintf(file, "]")) < 0)
 			goto done;
 	}
 

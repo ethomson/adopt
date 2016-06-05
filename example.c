@@ -10,14 +10,42 @@
 
 #include "adopt.h"
 
+static int verbose = 0;
+static int volume = 1;
+static char *channel = "default";
+static char *filename1 = NULL;
+static char *filename2 = NULL;
+
 adopt_spec opt_specs[] = {
-	{ ADOPT_VALUE, "debug", 'd', NULL, "display debug information" },
-	{ ADOPT_SWITCH, "help", 0, NULL, NULL, ADOPT_USAGE_HIDDEN },
-	{ ADOPT_VALUE, "verbose", 'v', "level", "sets the verbosity level (default 1)" },
-	{ ADOPT_VALUE, "channel", 'c', "channel", "sets the channel", ADOPT_USAGE_REQUIRED },
+	{ ADOPT_BOOL, "verbose", 'v', &verbose, 0,
+      NULL, "Turn on verbose information", 0 },
+	{ ADOPT_SWITCH, "quiet", 'q', &volume, 0,
+	  NULL, "Emit no output", 0 },
+	{ ADOPT_SWITCH, "loud", 'l', &volume, 2,
+	  NULL, "Emit louder than usual output", ADOPT_USAGE_CHOICE },
+	{ ADOPT_VALUE, "channel", 'c', &channel, 0,
+	  "channel", "Set the channel", ADOPT_USAGE_VALUE_REQUIRED },
 	{ ADOPT_LITERAL },
-	{ ADOPT_ARG, "file", 'f', NULL, "file path" },
+	{ ADOPT_ARG, NULL, 0, &filename1, 0,
+	  "file1", "The first filename", ADOPT_USAGE_REQUIRED },
+	{ ADOPT_ARG, NULL, 0, &filename2, 0,
+	  "file2", "The second (optional) filename", 0 },
+	{ 0 }
 };
+
+static const char *volume_tostr(int volume)
+{
+	switch(volume) {
+	case 0:
+		return "quiet";
+	case 1:
+		return "normal";
+	case 2:
+		return "loud";
+	}
+
+	return "unknown";
+}
 
 int main(int argc, const char **argv)
 {
@@ -27,14 +55,29 @@ int main(int argc, const char **argv)
 	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
 
 	while (adopt_parser_next(&opt, &parser)) {
-		if (opt.spec) {
-			printf("'%s' = ", opt.spec->name);
-			printf("'%s'\n", opt.value ? opt.value : "(null)");
-		} else {
-			fprintf(stderr, "Unknown option: %s\n", opt.value);
+		if (!opt.spec) {
+			fprintf(stderr, "Unknown option: %s\n", opt.arg);
+			adopt_usage_fprint(stderr, argv[0], opt_specs);
+			return 129;
+		}
+
+		if (!channel) {
+			fprintf(stderr, "Option: %s requires an argument\n", opt.arg);
 			adopt_usage_fprint(stderr, argv[0], opt_specs);
 			return 129;
 		}
 	}
+
+	if (!filename1) {
+		fprintf(stderr, "filename is required\n");
+		adopt_usage_fprint(stderr, argv[0], opt_specs);
+		return 129;
+	}
+
+	printf("verbose: %d\n", verbose);
+	printf("volume: %s\n", volume_tostr(volume));
+	printf("channel: %s\n", channel ? channel : "(null)");
+	printf("filename one: %s\n", filename1 ? filename1 : "(null)");
+	printf("filename two: %s\n", filename2 ? filename2 : "(null)");
 }
 

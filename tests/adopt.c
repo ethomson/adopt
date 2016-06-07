@@ -3,7 +3,7 @@
 
 static void test_parse(
 	adopt_spec *specs,
-	const char *args[],
+	char *args[],
 	size_t argslen,
 	adopt_opt expected[],
 	size_t expectlen)
@@ -56,7 +56,7 @@ void test_adopt__args(void)
 		{ 0 }
 	};
 
-	const char *args[] = { "bare1", "bare2" };
+	char *args[] = { "bare1", "bare2" };
 	adopt_opt expected[] = {
 		{ NULL, "bare1" },
 		{ NULL, "bare2" },
@@ -78,7 +78,7 @@ void test_adopt__unknown(void)
 		{ 0 }
 	};
 
-	const char *args[] = { "--unknown-long", "-u" };
+	char *args[] = { "--unknown-long", "-u" };
 	adopt_opt expected[] = {
 		{ NULL, "--unknown-long" },
 		{ NULL, "-u" },
@@ -100,7 +100,7 @@ void test_adopt__long_switches1(void)
 		{ 0 }
 	};
 
-	const char *args1[] = { "--foo", "bare1" };
+	char *args1[] = { "--foo", "bare1" };
 	adopt_opt expected1[] = {
 		{ &specs[0], NULL },
 		{ NULL, "bare1" },
@@ -122,7 +122,7 @@ void test_adopt__long_switches2(void)
 		{ 0 }
 	};
 
-	const char *args2[] = { "--foo", "--bar" };
+	char *args2[] = { "--foo", "--bar" };
 	adopt_opt expected2[] = {
 		{ &specs[0], NULL },
 		{ &specs[1], NULL }
@@ -145,7 +145,7 @@ void test_adopt__long_switches3(void)
 		{ 0 }
 	};
 
-	const char *args3[] = { "--foo", "bare2", "--bar", "-u" };
+	char *args3[] = { "--foo", "bare2", "--bar", "-u" };
 	adopt_opt expected3[] = {
 		{ &specs[0], NULL },
 		{ NULL, "bare2" },
@@ -169,7 +169,7 @@ void test_adopt__long_values1(void)
 		{ 0 }
 	};
 	
-	const char *args1[] = { "--foo", "arg_1" };
+	char *args1[] = { "--foo", "arg_1" };
 	adopt_opt expected1[] = {
 		{ &specs[0], "arg_1" },
 	};
@@ -190,7 +190,7 @@ void test_adopt__long_values2(void)
 		{ 0 }
 	};
 	
-	const char *args2[] = { "--foo", "--bar" };
+	char *args2[] = { "--foo", "--bar" };
 	adopt_opt expected2[] = {
 		{ &specs[0], "--bar" },
 	};
@@ -211,7 +211,7 @@ void test_adopt__long_values3(void)
 		{ 0 }
 	};
 	
-	const char *args3[] = { "--foo", "--arg_1", "--bar", "arg_2" };
+	char *args3[] = { "--foo", "--arg_1", "--bar", "arg_2" };
 	adopt_opt expected3[] = {
 		{ &specs[0], "--arg_1" },
 		{ &specs[1], "arg_2" },
@@ -233,7 +233,7 @@ void test_adopt__long_values4(void)
 		{ 0 }
 	};
 	
-	const char *args4[] = { "--foo=bar" };
+	char *args4[] = { "--foo=bar" };
 	adopt_opt expected4[] = {
 		{ &specs[0], "bar" },
 	};
@@ -254,7 +254,7 @@ void test_adopt__long_values5(void)
 		{ 0 }
 	};
 
-	const char *args5[] = { "--bar=" };
+	char *args5[] = { "--bar=" };
 	adopt_opt expected5[] = {
 		{ &specs[1], "" },
 	};
@@ -275,7 +275,7 @@ void test_adopt__short_switches1(void)
 		{ 0 }
 	};
 	
-	const char *args1[] = { "-f", "bare1" };
+	char *args1[] = { "-f", "bare1" };
 	adopt_opt expected1[] = {
 		{ &specs[0], NULL },
 		{ NULL, "bare1" },
@@ -297,7 +297,7 @@ void test_adopt__short_switches2(void)
 		{ 0 }
 	};
 	
-	const char *args2[] = { "-f", "-b" };
+	char *args2[] = { "-f", "-b" };
 	adopt_opt expected2[] = {
 		{ &specs[0], NULL },
 		{ &specs[1], NULL }
@@ -319,7 +319,7 @@ void test_adopt__short_switches3(void)
 		{ 0 }
 	};
 
-	const char *args3[] = { "-f", "bare2", "-b", "-u" };
+	char *args3[] = { "-f", "bare2", "-b", "-u" };
 	adopt_opt expected3[] = {
 		{ &specs[0], NULL },
 		{ NULL, "bare2" },
@@ -343,7 +343,7 @@ void test_adopt__short_values1(void)
 		{ 0 }
 	};
 	
-	const char *args1[] = { "-f", "arg_1" };
+	char *args1[] = { "-f", "arg_1" };
 	adopt_opt expected1[] = {
 		{ &specs[0], "arg_1" },
 	};
@@ -364,7 +364,7 @@ void test_adopt__short_values2(void)
 		{ 0 }
 	};
 	
-	const char *args2[] = { "-f", "--bar" };
+	char *args2[] = { "-f", "--bar" };
 	adopt_opt expected2[] = {
 		{ &specs[0], "--bar" },
 	};
@@ -385,7 +385,7 @@ void test_adopt__short_values3(void)
 		{ 0 }
 	};
 
-	const char *args3[] = { "-f", "--arg_1", "-b", "arg_2" };
+	char *args3[] = { "-f", "--arg_1", "-b", "arg_2" };
 	adopt_opt expected3[] = {
 		{ &specs[0], "--arg_1" },
 		{ &specs[1], "arg_2" },
@@ -407,7 +407,7 @@ void test_adopt__short_values4(void)
 		{ 0 }
 	};
 
-	const char *args4[] = { "-fbar" };
+	char *args4[] = { "-fbar" };
 	adopt_opt expected4[] = {
 		{ &specs[0], "bar" },
 	};
@@ -428,7 +428,7 @@ void test_adopt__short_values5(void)
 		{ 0 }
 	};
 
-	const char *args5[] = { "-b" };
+	char *args5[] = { "-b" };
 	adopt_opt expected5[] = {
 		{ &specs[1], NULL },
 	};
@@ -450,7 +450,7 @@ void test_adopt__literal(void)
 		{ 0 }
 	};
 
-	const char *args1[] = { "--foo", "--", "--bar" };
+	char *args1[] = { "--foo", "--", "--bar" };
 	adopt_opt expected1[] = {
 		{ &specs[0], NULL },
 		{ &specs[2], NULL },
@@ -473,7 +473,7 @@ void test_adopt__no_long_argument(void)
 		{ 0 },
 	};
 
-	const char *args1[] = { "-f", "--bar" };
+	char *args1[] = { "-f", "--bar" };
 	adopt_opt expected1[] = {
 		{ &specs[0], NULL },
 		{ &specs[1], NULL },

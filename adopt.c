@@ -84,7 +84,7 @@ INLINE(const adopt_spec *) spec_nextarg(adopt_parser *parser)
 static void parse_long(adopt_opt *opt, adopt_parser *parser)
 {
 	const adopt_spec *spec;
-	const char *arg = parser->args[parser->idx++], *name = arg + 2, *eql;
+	char *arg = parser->args[parser->idx++], *name = arg + 2, *eql;
 	size_t namelen;
 
 	namelen = (eql = strrchr(arg, '=')) ? (size_t)(eql - name) : strlen(name);
@@ -116,14 +116,14 @@ static void parse_long(adopt_opt *opt, adopt_parser *parser)
 			opt->value = parser->args[parser->idx++];
 
 		if (spec->value)
-			*((char **)spec->value) = (char *)opt->value;
+			*((char **)spec->value) = opt->value;
 	}
 }
 
 static void parse_short(adopt_opt *opt, adopt_parser *parser)
 {
 	const adopt_spec *spec;
-	const char *arg = parser->args[parser->idx++], alias = *(arg + 1);
+	char *arg = parser->args[parser->idx++], alias = *(arg + 1);
 
 	opt->arg = arg;
 
@@ -149,7 +149,7 @@ static void parse_short(adopt_opt *opt, adopt_parser *parser)
 			opt->value = parser->args[parser->idx++];
 
 		if (spec->value)
-			*((char **)spec->value) = (char *)opt->value;
+			*((char **)spec->value) = opt->value;
 	}
 }
 
@@ -161,7 +161,7 @@ static void parse_arg(adopt_opt *opt, adopt_parser *parser)
 	opt->arg = parser->args[parser->idx++];
 
 	if (spec && spec->value)
-		*((char **)spec->value) = (char *)opt->arg;
+		*((char **)spec->value) = opt->arg;
 
 	opt->status = spec ? ADOPT_STATUS_OK : ADOPT_STATUS_UNKNOWN_OPTION;
 	return opt->status;
@@ -170,7 +170,7 @@ static void parse_arg(adopt_opt *opt, adopt_parser *parser)
 void adopt_parser_init(
 	adopt_parser *parser,
 	const adopt_spec specs[],
-	const char **args,
+	char **args,
 	size_t args_len)
 {
 	assert(parser);

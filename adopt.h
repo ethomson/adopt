@@ -125,7 +125,7 @@ typedef struct adopt_opt {
 	 * The argument as it was specified on the command-line, including
 	 * dashes, eg, `-f` or `--foo`.
 	 */
-	const char *arg;
+	char *arg;
 
 	/**
 	 * The value provided to the argument, or `NULL` if the given
@@ -133,13 +133,13 @@ typedef struct adopt_opt {
 	 * If the argument did not match and `adopt_spec`, this will
 	 * point to the unknown argument.
 	 */
-	const void *value;
+	char *value;
 } adopt_opt;
 
 /* The internal parser state.  Callers should not modify this structure. */
 typedef struct adopt_parser {
 	const adopt_spec *specs;
-	const char **args;
+	char **args;
 	size_t args_len;
 
 	size_t idx;
@@ -160,7 +160,7 @@ typedef struct adopt_parser {
 void adopt_parser_init(
 	adopt_parser *parser,
 	const adopt_spec specs[],
-	const char **argv,
+	char **argv,
 	size_t args_len);
 
 /**

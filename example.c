@@ -47,7 +47,7 @@ static const char *volume_tostr(int volume)
 	return "unknown";
 }
 
-int main(int argc, const char **argv)
+int main(int argc, char **argv)
 {
 	adopt_parser parser;
 	adopt_opt opt;

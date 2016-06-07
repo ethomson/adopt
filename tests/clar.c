@@ -87,9 +87,12 @@
 
 #include "clar.h"
 
+__attribute__((unused))
 static void fs_rm(const char *_source);
+__attribute__((unused))
 static void fs_copy(const char *_source, const char *dest);
 
+__attribute__((unused))
 static const char *
 fixture_path(const char *base, const char *fixture_name);
 

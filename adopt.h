@@ -203,6 +203,19 @@ adopt_status_t adopt_parser_next(
 	adopt_parser *parser);
 
 /**
+ * Prints the status after parsing the most recent argument.  This is
+ * useful for printing an error message when an unknown argument was
+ * specified, or when an argument was specified without a value.
+ *
+ * @param file The file to print information to
+ * @param opt The option that failed to parse
+ * @return 0 on success, -1 on failure
+ */
+int adopt_status_fprint(
+	FILE *file,
+	const adopt_opt *opt);
+
+/**
  * Prints usage information to the given file handle.
  *
  * @param file The file to print information to

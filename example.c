@@ -55,14 +55,8 @@ int main(int argc, char **argv)
 	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
 
 	while (adopt_parser_next(&opt, &parser)) {
-		if (!opt.spec) {
-			fprintf(stderr, "Unknown option: %s\n", opt.arg);
-			adopt_usage_fprint(stderr, argv[0], opt_specs);
-			return 129;
-		}
-
-		if (!channel) {
-			fprintf(stderr, "Option: %s requires an argument\n", opt.arg);
+		if (opt.status != ADOPT_STATUS_OK) {
+			adopt_status_fprint(stderr, &opt);
 			adopt_usage_fprint(stderr, argv[0], opt_specs);
 			return 129;
 		}

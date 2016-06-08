@@ -226,6 +226,38 @@ adopt_status_t adopt_parser_next(adopt_opt *opt, adopt_parser *parser)
 		return parse_arg(opt, parser);
 }
 
+int adopt_status_fprint(
+	FILE *file,
+	const adopt_opt *opt)
+{
+	int error;
+
+	switch (opt->status) {
+	case ADOPT_STATUS_DONE:
+		error = fprintf(file, "Finished processing arguments (no error)\n");
+		break;
+	case ADOPT_STATUS_OK:
+		error = fprintf(file, "No error\n");
+		break;
+	case ADOPT_STATUS_UNKNOWN_OPTION:
+		error = fprintf(file, "Unknown option: %s\n", opt->arg);
+		break;
+	case ADOPT_STATUS_MISSING_VALUE:
+		if (strncmp(opt->arg, "--", 2) == 0)
+			error = fprintf(file, "Option '%s' requires a value.\n",
+				opt->spec->name);
+		else
+			error = fprintf(file, "Switch '%c' requires a value.\n",
+				opt->spec->alias);
+		break;
+	default:
+		error = fprintf(file, "Unknown status: %d\n", opt->status);
+		break;
+	}
+
+	return error;
+}
+
 int adopt_usage_fprint(
 	FILE *file,
 	const char *command,
@@ -243,9 +275,6 @@ int adopt_usage_fprint(
 
 		if (spec->usage & ADOPT_USAGE_HIDDEN)
 			continue;
-
-		if (spec->type == ADOPT_LITERAL)
-			optional = 0;
 
 		if (choice)
 			error = fprintf(file, "|");

@@ -24,7 +24,7 @@ adopt_spec opt_specs[] = {
 	{ ADOPT_SWITCH, "loud", 'l', &volume, 2,
 	  NULL, "Emit louder than usual output", ADOPT_USAGE_CHOICE },
 	{ ADOPT_VALUE, "channel", 'c', &channel, 0,
-	  "channel", "Set the channel", ADOPT_USAGE_VALUE_REQUIRED },
+	  "channel", "Set the channel", 0 },
 	{ ADOPT_LITERAL },
 	{ ADOPT_ARG, NULL, 0, &filename1, 0,
 	  "file1", "The first filename", ADOPT_USAGE_REQUIRED },

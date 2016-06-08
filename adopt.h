@@ -31,8 +31,11 @@ typedef enum {
 	 */
 	ADOPT_SWITCH,
 
-	/** An argument that has a value ("--name value" or "-n value") */
+	/** An argument that has a value ("-nvalue" or "--name value") */
 	ADOPT_VALUE,
+
+	/** An argument that has an optional value ("-n" or "-n foo") */
+	ADOPT_VALUE_OPTIONAL,
 
 	/** The literal arguments follow specifier, bare "--" */
 	ADOPT_LITERAL,
@@ -52,14 +55,11 @@ typedef enum {
 	/** This argument is required. */
 	ADOPT_USAGE_REQUIRED = (1u << 0),
 
-	/** A value is required for this argument. */
-	ADOPT_USAGE_VALUE_REQUIRED = (1u << 1),
-
 	/** This argument should not be displayed in usage. */
-	ADOPT_USAGE_HIDDEN = (1u << 2),
+	ADOPT_USAGE_HIDDEN = (1u << 1),
 
 	/** This is a multiple choice argument, combined with the previous arg. */
-	ADOPT_USAGE_CHOICE = (1u << 3),
+	ADOPT_USAGE_CHOICE = (1u << 2),
 } adopt_usage_t;
 
 /** Specification for an available option. */
@@ -74,16 +74,16 @@ typedef struct adopt_spec {
 	const char alias;
 
 	/**
-	 * If this spec is of type `ADOPT_VALUE`, this is a pointer to
-	 * a `char *`, that will be set to the value specified on the
-	 * command line.
-	 *
 	 * If this spec is of type `ADOPT_BOOL`, this is a pointer to
 	 * an `int` that will be set to `1` if the option is specified.
 	 *
 	 * If this spec is of type `ADOPT_SWITCH`, this is a pointer to
 	 * an `int` that will be set to the opt's `value` (below) when
 	 * this option is specified.
+	 *
+	 * If this spec is of type `ADOPT_VALUE` or `ADOPT_VALUE_OPTIONAL`,
+	 * this is a pointer to a `char *`, that will be set to the value
+	 * specified on the command line.
 	 */
 	void *value;
 
@@ -113,8 +113,35 @@ typedef struct adopt_spec {
 	adopt_usage_t usage;
 } adopt_spec;
 
+/** Return value for `adopt_parser_next`. */
+typedef enum {
+	/** Parsing is complete; there are no more arguments. */
+	ADOPT_STATUS_DONE = 0,
+
+	/**
+	 * This argument was parsed correctly; the `opt` structure is
+	 * populated and the value pointer has been set.
+	 */
+	ADOPT_STATUS_OK = 1,
+
+	/**
+	 * The argument could not be parsed correctly, it does not match
+	 * any of the specifications provided.
+	 */
+	ADOPT_STATUS_UNKNOWN_OPTION = 2,
+
+	/**
+	 * The argument matched a spec of type `ADOPT_VALUE`, but no value
+	 * was provided.
+	 */
+	ADOPT_STATUS_MISSING_VALUE = 3,
+} adopt_status_t;
+
 /** An option provided on the command-line. */
 typedef struct adopt_opt {
+	/** The status of parsing the most recent argument. */
+	adopt_status_t status;
+
 	/**
 	 * The specification that was provided on the command-line, or 
 	 * `NULL` if the argument did not match an `adopt_spec`.
@@ -128,10 +155,8 @@ typedef struct adopt_opt {
 	char *arg;
 
 	/**
-	 * The value provided to the argument, or `NULL` if the given
-	 * argument is a switch argument that does not take a value.
-	 * If the argument did not match and `adopt_spec`, this will
-	 * point to the unknown argument.
+	 * If the spec is of type `ADOPT_VALUE` or `ADOPT_VALUE_OPTIONAL`,
+	 * this is the value provided to the argument.
 	 */
 	char *value;
 } adopt_opt;
@@ -173,7 +198,7 @@ void adopt_parser_init(
  * @return true if the caller should continue iterating, or 0 if there are
  *         no arguments left to process.
  */
-int adopt_parser_next(
+adopt_status_t adopt_parser_next(
 	adopt_opt *opt,
 	adopt_parser *parser);
 

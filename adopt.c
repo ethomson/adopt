@@ -77,6 +77,9 @@ INLINE(const adopt_spec *) spec_nextarg(adopt_parser *parser)
 			
 			args++;
 		}
+
+		if (spec->type == ADOPT_ARGS && args == parser->arg_idx)
+			return spec;
 	}
 	
 	return NULL;

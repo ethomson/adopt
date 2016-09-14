@@ -30,6 +30,8 @@ adopt_spec opt_specs[] = {
 	  "file1", "The first filename", ADOPT_USAGE_REQUIRED },
 	{ ADOPT_ARG, NULL, 0, &filename2, 0,
 	  "file2", "The second (optional) filename", 0 },
+	{ ADOPT_ARGS, NULL, 0, NULL, 0,
+	  "other", "The other (optional) arguments", 0 },
 	{ 0 }
 };
 

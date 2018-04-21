@@ -60,6 +60,9 @@ typedef enum {
 
 	/** This is a multiple choice argument, combined with the previous arg. */
 	ADOPT_USAGE_CHOICE = (1u << 2),
+
+	/** In usage, show the long format instead of the abbreviated format. */
+	ADOPT_USAGE_SHOW_LONG = (1u << 3),
 } adopt_usage_t;
 
 /** Specification for an available option. */
@@ -143,7 +146,7 @@ typedef struct adopt_opt {
 	adopt_status_t status;
 
 	/**
-	 * The specification that was provided on the command-line, or 
+	 * The specification that was provided on the command-line, or
 	 * `NULL` if the argument did not match an `adopt_spec`.
 	 */
 	const adopt_spec *spec;
@@ -191,7 +194,7 @@ void adopt_parser_init(
 /**
  * Parses the next command-line argument and places the information about
  * the argument into the given `opt` data.
- * 
+ *
  * @param opt The `adopt_opt` information parsed from the argument
  * @param parser An `adopt_parser` that has been initialized with
  *        `adopt_parser_init`

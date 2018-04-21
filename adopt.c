@@ -67,21 +67,21 @@ INLINE(const adopt_spec *) spec_nextarg(adopt_parser *parser)
 {
 	const adopt_spec *spec;
 	size_t args = 0;
-	
+
 	for (spec = parser->specs; spec->type; ++spec) {
 		if (spec->type == ADOPT_ARG) {
 			if (args == parser->arg_idx) {
 				parser->arg_idx++;
 				return spec;
 			}
-			
+
 			args++;
 		}
 
 		if (spec->type == ADOPT_ARGS && args == parser->arg_idx)
 			return spec;
 	}
-	
+
 	return NULL;
 }
 
@@ -304,7 +304,7 @@ int adopt_usage_fprint(
 			error = fprintf(file, "<%s...>", spec->value_name);
 		else if (spec->type == ADOPT_LITERAL)
 			error = fprintf(file, "--");
-		else if (spec->alias)
+		else if (spec->alias && !(spec->usage & ADOPT_USAGE_SHOW_LONG))
 			error = fprintf(file, "-%c", spec->alias);
 		else
 			error = fprintf(file, "--%s", spec->name);

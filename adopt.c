@@ -229,6 +229,26 @@ adopt_status_t adopt_parser_next(adopt_opt *opt, adopt_parser *parser)
 		return parse_arg(opt, parser);
 }
 
+adopt_status_t adopt_parse(
+	adopt_opt *opt,
+	const adopt_spec specs[],
+	char **args,
+	size_t args_len)
+{
+	adopt_parser parser;
+
+	adopt_parser_init(&parser, specs, args, args_len);
+
+	while (adopt_parser_next(opt, &parser)) {
+		if (opt->status != ADOPT_STATUS_OK &&
+		    opt->status != ADOPT_STATUS_DONE) {
+			break;
+		}
+	}
+
+	return opt->status;
+}
+
 int adopt_status_fprint(
 	FILE *file,
 	const adopt_opt *opt)

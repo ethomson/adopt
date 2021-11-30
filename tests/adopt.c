@@ -168,7 +168,7 @@ void test_adopt__long_switches2(void)
 		{ &specs[0], NULL },
 		{ &specs[1], NULL }
 	};
-	
+
 	/* Parse --foo --bar */
 	test_parse(specs, args2, 2, expected2, 2);
 	cl_assert_equal_i('f', foo);
@@ -193,7 +193,7 @@ void test_adopt__long_switches3(void)
 		{ &specs[1], NULL },
 		{ NULL, "-u" },
 	};
-	
+
 	/* Parse --foo bare2 --bar -u */
 	test_parse(specs, args3, 4, expected3, 4);
 	cl_assert_equal_i('f', foo);
@@ -209,7 +209,7 @@ void test_adopt__long_values1(void)
 		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
-	
+
 	char *args1[] = { "--foo", "arg_1" };
 	adopt_expected expected1[] = {
 		{ &specs[0], "arg_1" },
@@ -230,7 +230,7 @@ void test_adopt__long_values2(void)
 		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
-	
+
 	char *args2[] = { "--foo", "--bar" };
 	adopt_expected expected2[] = {
 		{ &specs[0], "--bar" },
@@ -251,7 +251,7 @@ void test_adopt__long_values3(void)
 		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
-	
+
 	char *args3[] = { "--foo", "--arg_1", "--bar", "arg_2" };
 	adopt_expected expected3[] = {
 		{ &specs[0], "--arg_1" },
@@ -273,7 +273,7 @@ void test_adopt__long_values4(void)
 		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
-	
+
 	char *args4[] = { "--foo=bar" };
 	adopt_expected expected4[] = {
 		{ &specs[0], "bar" },
@@ -333,7 +333,7 @@ void test_adopt__short_switches2(void)
 		{ ADOPT_SWITCH, "bar", 'b', &bar, 'b' },
 		{ 0 }
 	};
-	
+
 	char *args2[] = { "-f", "-b" };
 	adopt_expected expected2[] = {
 		{ &specs[0], NULL },
@@ -379,7 +379,7 @@ void test_adopt__short_values1(void)
 		{ ADOPT_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
-	
+
 	char *args1[] = { "-f", "arg_1" };
 	adopt_expected expected1[] = {
 		{ &specs[0], "arg_1" },
@@ -400,7 +400,7 @@ void test_adopt__short_values2(void)
 		{ ADOPT_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
-	
+
 	char *args2[] = { "-f", "--bar" };
 	adopt_expected expected2[] = {
 		{ &specs[0], "--bar" },
@@ -525,7 +525,7 @@ void test_adopt__no_long_argument(void)
 void test_adopt__parse_oneshot(void)
 {
 	int foo = 0, bar = 0;
-	adopt_opt invalid;
+	adopt_opt result;
 
 	adopt_spec specs[] = {
 		{ ADOPT_SWITCH, NULL, 'f', &foo, 'f' },
@@ -535,20 +535,20 @@ void test_adopt__parse_oneshot(void)
 
 	char *args[] = { "-f", "--bar" };
 
-	cl_must_pass(adopt_parse(&invalid, specs, args, 2));
+	cl_must_pass(adopt_parse(&result, specs, args, 2));
 
 	cl_assert_equal_i('f', foo);
 	cl_assert_equal_i('b', bar);
 
-	cl_assert_equal_i(ADOPT_STATUS_DONE, invalid.status);
-	cl_assert_equal_p(NULL, invalid.arg);
-	cl_assert_equal_p(NULL, invalid.value);
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
 }
 
 void test_adopt__parse_oneshot_unknown_option(void)
 {
 	int foo = 0, bar = 0;
-	adopt_opt invalid;
+	adopt_opt result;
 
 	adopt_spec specs[] = {
 		{ ADOPT_SWITCH, NULL, 'f', &foo, 'f' },
@@ -558,14 +558,14 @@ void test_adopt__parse_oneshot_unknown_option(void)
 
 	char *args[] = { "-f", "--bar", "--asdf" };
 
-	cl_assert_equal_i(ADOPT_STATUS_UNKNOWN_OPTION, adopt_parse(&invalid, specs, args, 3));
+	cl_assert_equal_i(ADOPT_STATUS_UNKNOWN_OPTION, adopt_parse(&result, specs, args, 3));
 }
 
 void test_adopt__parse_oneshot_missing_value(void)
 {
 	int foo = 0;
 	char *bar = NULL;
-	adopt_opt invalid;
+	adopt_opt result;
 
 	adopt_spec specs[] = {
 		{ ADOPT_SWITCH, NULL, 'f', &foo, 'f' },
@@ -575,5 +575,5 @@ void test_adopt__parse_oneshot_missing_value(void)
 
 	char *args[] = { "-f", "--bar" };
 
-	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, adopt_parse(&invalid, specs, args, 2));
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, adopt_parse(&result, specs, args, 2));
 }

@@ -321,7 +321,7 @@ int adopt_usage_fprint(
 		else if (spec->type == ADOPT_ARG)
 			error = fprintf(file, "<%s>", spec->value_name);
 		else if (spec->type == ADOPT_ARGS)
-			error = fprintf(file, "<%s...>", spec->value_name);
+			error = fprintf(file, "<%s>...", spec->value_name);
 		else if (spec->type == ADOPT_LITERAL)
 			error = fprintf(file, "--");
 		else if (spec->alias && !(spec->usage & ADOPT_USAGE_SHOW_LONG))

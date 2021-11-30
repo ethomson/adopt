@@ -94,8 +94,6 @@ ENDIF()
 FILE(GLOB ALL_SRC adopt.c adopt.h)
 INCLUDE_DIRECTORIES(.)
 
-FILE(GLOB SRC_EXAMPLE ${ALL_SRC} example.c)
-
 FIND_PACKAGE(PythonInterp REQUIRED)
 
 SET(CLAR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests")
@@ -115,7 +113,8 @@ SET_SOURCE_FILES_PROPERTIES(
 	PROPERTIES OBJECT_DEPENDS ${CLAR_PATH}/clar.suite)
 
 ADD_EXECUTABLE(adopt_tests ${SRC_TEST})
-ADD_EXECUTABLE(adopt_example ${SRC_EXAMPLE})
+ADD_EXECUTABLE(example_parse ${ALL_SRC} examples/parse.c)
+ADD_EXECUTABLE(example_loop ${ALL_SRC} examples/loop.c)
 
 IF (WIN32)
 	TARGET_LINK_LIBRARIES(adopt_tests ws2_32)

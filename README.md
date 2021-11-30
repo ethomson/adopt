@@ -83,33 +83,62 @@ elements, terminated with an `adopt_spec` initialized to zeroes.
 Parsing arguments
 -----------------
 
-After initializing the parser by calling  `adopt_parser_init` 
-with the `adopt_spec`s and the command-line arguments given
-to your program, you can call `adopt_parser_next` in a loop
-to handle each option.
+The simplest way to parse arguments is by calling `adopt_parse`.
+This will parse the arguments given to it, will set the given
+`spec->value`s to the appropriate arguments, and will stop and
+return an error on any invalid input.  If there are errors, you
+can display that information with `adopt_status_fprint`.
+
+```c
+int main(int argc, const char **argv)
+{
+    adopt_parser parser;
+    adopt_opt result;
+    const char *value;
+    const char *file;
+    
+    if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) < 0) {
+            adopt_status_fprint(stderr, &opt);
+            adopt_usage_fprint(stderr, argv[0], opt_specs);
+            return 129;
+    }
+}
+```
+
+Parsing arguments individually
+-------------------------------
+
+For more control over your parsing, you may iterate over the
+parser in a loop.  After initializing the parser by calling
+`adopt_parser_init` with the `adopt_spec`s and the command-line
+arguments given to your program, you can call `adopt_parser_next`
+in a loop to handle each option.
    
-    int main(int argc, const char **argv)
-    {
-        adopt_parser parser;
-        adopt_opt opt;
-        const char *value;
-        const char *file;
-        
-        adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
-        
-        while (adopt_parser_next(&opt, &parser)) {
-            /* Although regular practice would be to simply let the parser
-             * set the variables for you, there is information about the
-             * parsed argument available in the `opt` struct.  For example,
-             * `opt.spec` will point to the `adopt_spec` that was parsed,
-             * or `NULL` if it did not match a specification.
-             */
-            if (!opt.spec) {
-                fprintf(stderr, "Unknown option: %s\n", opt.arg);
-                return 129;
-            }
+```c
+int main(int argc, const char **argv)
+{
+    adopt_parser parser;
+    adopt_opt opt;
+    const char *value;
+    const char *file;
+    
+    adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
+    
+    while (adopt_parser_next(&opt, &parser)) {
+        /*
+         * Although regular practice would be to simply let the parser
+         * set the variables for you, there is information about the
+         * parsed argument available in the `opt` struct.  For example,
+         * `opt.spec` will point to the `adopt_spec` that was parsed,
+         * or `NULL` if it did not match a specification.
+         */
+        if (!opt.spec) {
+            fprintf(stderr, "Unknown option: %s\n", opt.arg);
+            return 129;
         }
     }
+}
+```
 
 Required arguments
 ------------------

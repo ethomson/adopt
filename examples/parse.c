@@ -15,6 +15,7 @@ static int volume = 1;
 static char *channel = "default";
 static char *filename1 = NULL;
 static char *filename2 = NULL;
+static char **other = NULL;
 
 adopt_spec opt_specs[] = {
 	{ ADOPT_BOOL, "verbose", 'v', &verbose, 0,
@@ -30,7 +31,7 @@ adopt_spec opt_specs[] = {
 	  "file1", "The first filename", ADOPT_USAGE_REQUIRED },
 	{ ADOPT_ARG, NULL, 0, &filename2, 0,
 	  "file2", "The second (optional) filename", 0 },
-	{ ADOPT_ARGS, NULL, 0, NULL, 0,
+	{ ADOPT_ARGS, NULL, 0, &other, 0,
 	  "other", "The other (optional) arguments", 0 },
 	{ 0 }
 };
@@ -51,17 +52,13 @@ static const char *volume_tostr(int volume)
 
 int main(int argc, char **argv)
 {
-	adopt_parser parser;
-	adopt_opt opt;
+	adopt_opt result;
+	size_t i;
 
-	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
-
-	while (adopt_parser_next(&opt, &parser)) {
-		if (opt.status != ADOPT_STATUS_OK) {
-			adopt_status_fprint(stderr, &opt);
-			adopt_usage_fprint(stderr, argv[0], opt_specs);
-			return 129;
-		}
+	if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) < 0) {
+		adopt_status_fprint(stderr, &result);
+		adopt_usage_fprint(stderr, argv[0], opt_specs);
+		return 129;
 	}
 
 	if (!filename1) {
@@ -75,5 +72,19 @@ int main(int argc, char **argv)
 	printf("channel: %s\n", channel ? channel : "(null)");
 	printf("filename one: %s\n", filename1 ? filename1 : "(null)");
 	printf("filename two: %s\n", filename2 ? filename2 : "(null)");
+
+	/* display other args */
+	if (other) {
+		printf("other args [%d]: ", (int)result.args_len);
+
+		for (i = 0; i < result.args_len; i++) {
+			if (i)
+				printf(", ");
+
+			printf("%s", other[i]);
+		}
+
+		printf("\n");
+	}
 }
 

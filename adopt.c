@@ -181,12 +181,28 @@ static adopt_status_t parse_arg(adopt_opt *opt, adopt_parser *parser)
 	const adopt_spec *spec = spec_nextarg(parser);
 
 	opt->spec = spec;
-	opt->arg = parser->args[parser->idx++];
+	opt->arg = parser->args[parser->idx];
 
-	if (spec && spec->value)
-		*((char **)spec->value) = opt->arg;
+	if (!spec) {
+		parser->idx++;
+		opt->status = ADOPT_STATUS_UNKNOWN_OPTION;
+	} else if (spec->type == ADOPT_ARGS) {
+		if (spec->value)
+			*((char ***)spec->value) = &parser->args[parser->idx];
 
-	opt->status = spec ? ADOPT_STATUS_OK : ADOPT_STATUS_UNKNOWN_OPTION;
+		/* Args consume all the remaining arguments. */
+		parser->in_args = (parser->args_len - parser->idx);
+		parser->idx = parser->args_len;
+		opt->args_len = parser->in_args;
+		opt->status = ADOPT_STATUS_OK;
+	} else {
+		if (spec->value)
+			*((char **)spec->value) = parser->args[parser->idx];
+
+		parser->idx++;
+		opt->status = ADOPT_STATUS_OK;
+	}
+
 	return opt->status;
 }
 
@@ -211,8 +227,10 @@ adopt_status_t adopt_parser_next(adopt_opt *opt, adopt_parser *parser)
 
 	memset(opt, 0x0, sizeof(adopt_opt));
 
-	if (parser->idx >= parser->args_len)
+	if (parser->idx >= parser->args_len) {
+		opt->args_len = parser->in_args;
 		return ADOPT_STATUS_DONE;
+	}
 
 	/* Handle arguments in long form, those beginning with "--" */
 	if (strncmp(parser->args[parser->idx], "--", 2) == 0 &&

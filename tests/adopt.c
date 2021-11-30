@@ -577,3 +577,181 @@ void test_adopt__parse_oneshot_missing_value(void)
 
 	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, adopt_parse(&result, specs, args, 2));
 }
+
+void test_adopt__parse_arg(void)
+{
+	int foo = 0;
+	char *bar = NULL, *arg1 = NULL, *arg2 = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_ARG,    "arg1", 0,  &arg1,  0  },
+		{ ADOPT_ARG,    "arg2", 0,  &arg2,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "bar", "baz" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 3));
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_p(NULL, bar);
+	cl_assert_equal_s("bar", arg1);
+	cl_assert_equal_p("baz", arg2);
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+}
+
+void test_adopt__parse_arg_mixed_with_switches(void)
+{
+	int foo = 0;
+	char *bar = NULL, *arg1 = NULL, *arg2 = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_ARG,    "arg1", 0,  &arg1,  0  },
+		{ ADOPT_SWITCH, "bar",  0,  &bar,  'b' },
+		{ ADOPT_ARG,    "arg2", 0,  &arg2,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "bar", "baz", "--bar" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 4));
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_p('b', bar);
+	cl_assert_equal_s("bar", arg1);
+	cl_assert_equal_p("baz", arg2);
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+}
+
+void test_adopt__parse_arg_with_literal(void)
+{
+	int foo = 0;
+	char *bar = NULL, *arg1 = NULL, *arg2 = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_LITERAL },
+		{ ADOPT_ARG,    "arg1", 0,  &arg1,  0  },
+		{ ADOPT_ARG,    "arg2", 0,  &arg2,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "--", "--bar" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 3));
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_p(NULL, bar);
+	cl_assert_equal_s("--bar", arg1);
+	cl_assert_equal_p(NULL, arg2);
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+}
+
+void test_adopt__parse_args(void)
+{
+	int foo = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "--bar", "BRR", "one", "two", "three", "four" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 7));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(4, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_s("BRR", bar);
+	cl_assert(argz);
+	cl_assert_equal_s("one", argz[0]);
+	cl_assert_equal_s("two", argz[1]);
+	cl_assert_equal_s("three", argz[2]);
+	cl_assert_equal_s("four", argz[3]);
+}
+
+void test_adopt__parse_args_with_literal(void)
+{
+	int foo = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_LITERAL },
+		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "--", "--bar", "asdf", "--baz" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 5));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(3, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_p(NULL, bar);
+	cl_assert(argz);
+	cl_assert_equal_s("--bar", argz[0]);
+	cl_assert_equal_s("asdf", argz[1]);
+	cl_assert_equal_s("--baz", argz[2]);
+}
+
+void test_adopt__parse_args_implies_literal(void)
+{
+	int foo = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "foo", "bar", "--bar" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 4));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(3, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_p(NULL, bar);
+	cl_assert(argz);
+	cl_assert_equal_s("foo", argz[0]);
+	cl_assert_equal_s("bar", argz[1]);
+	cl_assert_equal_s("--bar", argz[2]);
+}
+

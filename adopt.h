@@ -87,6 +87,10 @@ typedef struct adopt_spec {
 	 * If this spec is of type `ADOPT_VALUE` or `ADOPT_VALUE_OPTIONAL`,
 	 * this is a pointer to a `char *`, that will be set to the value
 	 * specified on the command line.
+	 *
+	 * If this spec is of type `ADOPT_VALUES`, this is a pointer to a
+	 * `char **` that will be set to the remaining values specified on
+	 * the command line.
 	 */
 	void *value;
 
@@ -162,6 +166,13 @@ typedef struct adopt_opt {
 	 * this is the value provided to the argument.
 	 */
 	char *value;
+
+	/**
+	 * If the argument is of type `ADOPT_ARGS`, this is the number of
+	 * arguments remaining.  This value is persisted even when parsing
+	 * is complete and `status` == `ADOPT_STATUS_DONE`.
+	 */
+	size_t args_len;
 } adopt_opt;
 
 /* The internal parser state.  Callers should not modify this structure. */
@@ -172,8 +183,9 @@ typedef struct adopt_parser {
 
 	size_t idx;
 	size_t arg_idx;
+	size_t in_args;
 	int in_literal : 1,
-	in_short : 1;
+	    in_short : 1;
 } adopt_parser;
 
 /**

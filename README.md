@@ -40,45 +40,47 @@ Specifying command-line options
 Options should be specified as an array of `adopt_spec` elements,
 elements, terminated with an `adopt_spec` initialized to zeroes.
 
-    int verbose = 0;
-    int volume = 1;
-    char *channel = "default";
-    char *filename1 = NULL;
-	char *filename2 = NULL;
+```c
+int verbose = 0;
+int volume = 1;
+char *channel = "default";
+char *filename1 = NULL;
+char *filename2 = NULL;
 
-    adopt_spec opt_specs[] = {
-        /* `verbose`, above, will be set to `1` when specified. */
-        { ADOPT_BOOL, "verbose", 'v', &verbose },
+adopt_spec opt_specs[] = {
+    /* `verbose`, above, will be set to `1` when specified. */
+    { ADOPT_BOOL, "verbose", 'v', &verbose },
 
-        /* `volume` will be set to `0` when `--quiet` is specified, and
-         * set to `2` when `--loud` is specified.  if neither is specified,
-         * it will retain its default value of `1`, defined above.
-         */
-        { ADOPT_SWITCH, "quiet", 'q', &volume, 0 },
-        { ADOPT_SWITCH, "loud", 'l', &volume, 2 },
+    /* `volume` will be set to `0` when `--quiet` is specified, and
+     * set to `2` when `--loud` is specified.  if neither is specified,
+     * it will retain its default value of `1`, defined above.
+     */
+    { ADOPT_SWITCH, "quiet", 'q', &volume, 0 },
+    { ADOPT_SWITCH, "loud", 'l', &volume, 2 },
 
-        /* `channel` will be set to the given argument if an argument is
-         * provided to `--channel`, or will be set to `NULL` if no argument
-         * was specified.
-         */
-        { ADOPT_VALUE, "channel", 'c', &channel, NULL },
+    /* `channel` will be set to the given argument if an argument is
+     * provided to `--channel`, or will be set to `NULL` if no argument
+     * was specified.
+     */
+    { ADOPT_VALUE, "channel", 'c', &channel, NULL },
 
-        /* A double dash (`--`) may be specified to indicate that the parser
-         * should stop treated arguments as possible options and treat
-         * remaining arguments as literal arguments; which allows a user
-         * to specify `--loud` as an actual literal filename (below).
-         */
-        { ADOPT_LITERAL },
+    /* A double dash (`--`) may be specified to indicate that the parser
+     * should stop treated arguments as possible options and treat
+     * remaining arguments as literal arguments; which allows a user
+     * to specify `--loud` as an actual literal filename (below).
+     */
+    { ADOPT_LITERAL },
 
-        /* `filename` will be set to the first bare argument */
-        { ADOPT_ARG, NULL, 0, &filename1 },
+    /* `filename` will be set to the first bare argument */
+    { ADOPT_ARG, NULL, 0, &filename1 },
 
-        /* `filename2` will be set to the first bare argument */
-        { ADOPT_ARG, NULL, 0, &filename2 },
+    /* `filename2` will be set to the first bare argument */
+    { ADOPT_ARG, NULL, 0, &filename2 },
 
-        /* End of the specification list. */
-        { 0 },
-    };
+    /* End of the specification list. */
+    { 0 },
+};
+```
 
 Parsing arguments
 -----------------
@@ -152,20 +154,24 @@ the `--channel` option is specified without a value, then `channel` will
 be set to `NULL` when it is read.  This can be detected either during the
 processing loop, or after.  For example:
 
-    if (!channel) {
-        fprintf(stderr, "Option: %s requires an argument\n", opt.arg);
-        return 129;
-    }
+```c
+if (!channel) {
+    fprintf(stderr, "Option: %s requires an argument\n", opt.arg);
+    return 129;
+}
+```
 
 ### Inspecting the `opt` struct
 
 If you cannot use a sentinal value, perhaps because `NULL` is a useful
 value, you can also inspect the `opt` struct.  For example:
 
-    if (opt.spec->value == &channel && !channel) {
-        fprintf(stderr, "Option: %s requires an argument\n", opt.arg);
-        return 129;
-    }
+```c
+if (opt.spec->value == &channel && !channel) {
+    fprintf(stderr, "Option: %s requires an argument\n", opt.arg);
+    return 129;
+}
+```
 
 Displaying usage
 ----------------
@@ -187,49 +193,55 @@ will display it within square brackets.)
 
 Adding these to the above example:
 
-    adopt_spec opt_specs[] = {
-        /* For bools and switches, you probably only want to set the help.
-		 * There is no value to describe, and these are unlikely to be
-		 * required.
-		 */
-        { ADOPT_BOOL, "verbose", 'v', &verbose,
-          NULL, "Turn on verbose mode", 0 },
+```c
+adopt_spec opt_specs[] = {
+    /* For bools and switches, you probably only want to set the help.
+     * There is no value to describe, and these are unlikely to be
+     * required.
+     */
+    { ADOPT_BOOL, "verbose", 'v', &verbose,
+      NULL, "Turn on verbose mode", 0 },
 
-		/* Specifying that an option is an `ADOPT_USAGE_CHOICE` indicates
-		 * that it is orthogonal to the previous entry.  These two options
-		 * will be rendered together in help output as `[-q|-l]`.
-		 */
-        { ADOPT_SWITCH, "quiet", 'q', &volume, 0,
-          NULL, "Emit no output", 0 },
-        { ADOPT_SWITCH, "loud", 'l', &volume, 2 },
-          NULL, "Emit louder than usual output", ADOPT_USAGE_CHOICE },
+    /* Specifying that an option is an `ADOPT_USAGE_CHOICE` indicates
+     * that it is orthogonal to the previous entry.  These two options
+     * will be rendered together in help output as `[-q|-l]`.
+     */
+    { ADOPT_SWITCH, "quiet", 'q', &volume, 0,
+      NULL, "Emit no output", 0 },
+    { ADOPT_SWITCH, "loud", 'l', &volume, 2 },
+      NULL, "Emit louder than usual output", ADOPT_USAGE_CHOICE },
 
-        /* Set the `value_name` and specify that the value is required.
-         * This will be rendered in help output as `-c <channel>`;
-		 * if it was not required, it would be rendered as `-c [<channel>]`.
-         */
-        { ADOPT_VALUE, "channel", 'c', &channel, NULL,
-		  "channel", "Set the channel number", ADOPT_USAGE_VALUE_REQUIRED },
+    /* Set the `value_name` and specify that the value is required.
+     * This will be rendered in help output as `-c <channel>`;
+     * if it was not required, it would be rendered as `-c [<channel>]`.
+     */
+    { ADOPT_VALUE, "channel", 'c', &channel, NULL,
+      "channel", "Set the channel number", ADOPT_USAGE_VALUE_REQUIRED },
 
-        { ADOPT_LITERAL },
+    { ADOPT_LITERAL },
 
-        /* `filename` is required.  It will be rendered in help output as
-		 * `<file1>`.
-        { ADOPT_ARG, NULL, 0, &filename1, NULL,
-		  "file1", "The first filename", ADOPT_USAGE_REQUIRED },
+    /* `filename` is required.  It will be rendered in help output as
+     * `<file1>`.
+     */
+    { ADOPT_ARG, NULL, 0, &filename1, NULL,
+      "file1", "The first filename", ADOPT_USAGE_REQUIRED },
 
-        /* `filename` is not required.  It will be rendered in help output
-		 * as `[<file2>]`.
-        { ADOPT_ARG, NULL, 0, &filename2, NULL,
-		  "file2", "The second (optional) filename", 0 },
+    /* `filename` is not required.  It will be rendered in help output
+     * as `[<file2>]`.
+     */
+    { ADOPT_ARG, NULL, 0, &filename2, NULL,
+      "file2", "The second (optional) filename", 0 },
 
-        /* End of the specification list. */
-        { 0 },
-    };
+    /* End of the specification list. */
+    { 0 },
+};
+```
 
 If you call `adopt_usage_fprint` with the above specifications, it will emit:
 
-    usage: ./example [-v] [-q] [-l] [-c <channel>] -- <file1> [<file2>]
+```
+usage: ./example [-v] [-q] [-l] [-c <channel>] -- <file1> [<file2>]
+```
 
 Inclusion in your product
 -------------------------
@@ -240,7 +252,9 @@ product without using the `adopt_` prefix, you can use the included
 
 For example:
 
-    % ./rename.pl ed_opt
+```bash
+% ./rename.pl ed_opt
+```
 
 Will product `ed_opt.c` and `ed_opt.h` that can be included in an
 application, with the variables renamed to `ed_opt` (instead of `adopt`)
@@ -248,7 +262,9 @@ and enum names renamed to `ED_OPT` (instead of `ADOPT`).
 
 Or simply:
 
-    % ./rename.pl opt
+```bash
+% ./rename.pl opt
+```
 
 To produce `opt.c` and `opt.h`, with variables prefixed with `opt`.
 

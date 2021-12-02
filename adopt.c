@@ -305,14 +305,17 @@ int adopt_usage_fprint(
 	const adopt_spec specs[])
 {
 	const adopt_spec *spec;
-	int choice = 0;
+	int choice = 0, next_choice = 0, optional = 0;
 	int error;
 
 	if ((error = fprintf(file, "usage: %s", command)) < 0)
 		goto done;
 
 	for (spec = specs; spec->type; ++spec) {
-		int optional = !(spec->usage & ADOPT_USAGE_REQUIRED);
+		if (!choice)
+			optional = !(spec->usage & ADOPT_USAGE_REQUIRED);
+
+		next_choice = !!((spec + 1)->usage & ADOPT_USAGE_CHOICE);
 
 		if (spec->usage & ADOPT_USAGE_HIDDEN)
 			continue;
@@ -326,6 +329,11 @@ int adopt_usage_fprint(
 			goto done;
 
 		if (optional && !choice && (error = fprintf(file, "[")) < 0)
+			error = fprintf(file, "[");
+		if (!optional && !choice && next_choice)
+			error = fprintf(file, "(");
+
+		if (error < 0)
 			goto done;
 
 		if (spec->type == ADOPT_VALUE && spec->alias)
@@ -350,10 +358,15 @@ int adopt_usage_fprint(
 		if (error < 0)
 			goto done;
 
-		choice = !!((spec+1)->usage & ADOPT_USAGE_CHOICE);
+		if (!optional && choice && !next_choice)
+			error = fprintf(file, ")");
+		else if (optional && !next_choice)
+			error = fprintf(file, "]");
 
-		if (optional && !choice && (error = fprintf(file, "]")) < 0)
+		if (error < 0)
 			goto done;
+
+		choice = next_choice;
 	}
 
 	error = fprintf(file, "\n");

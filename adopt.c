@@ -336,7 +336,7 @@ int adopt_usage_fprint(
 		if (error < 0)
 			goto done;
 
-		if (spec->type == ADOPT_VALUE && spec->alias)
+		if (spec->type == ADOPT_VALUE && spec->alias && !(spec->usage & ADOPT_USAGE_SHOW_LONG))
 			error = fprintf(file, "-%c <%s>", spec->alias, spec->value_name);
 		else if (spec->type == ADOPT_VALUE)
 			error = fprintf(file, "--%s=<%s>", spec->name, spec->value_name);

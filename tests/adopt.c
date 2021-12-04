@@ -825,3 +825,33 @@ void test_adopt__required_choice_specified(void)
 	cl_assert_equal_p(NULL, result.value);
 	cl_assert_equal_i(0, result.args_len);
 }
+
+void test_adopt__choice_switch_or_arg_advances_arg(void)
+{
+	int foo = 0;
+	char *bar = NULL, *baz = NULL, *final = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo",  'f', &foo,  'f', NULL, NULL },
+		{ ADOPT_SWITCH, "fooz", 'z', &foo,  'z', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_VALUE,  "bar",   0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_ARG,    "baz",   0,  &baz,   0,  NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_ARG,    "final", 0, &final, 0,  NULL, NULL, 0 },
+		{ 0 },
+	};
+
+	char *args[] = { "-z", "actually_final" };
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, adopt_parse(&result, specs, args, 2));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(0, result.args_len);
+
+	cl_assert_equal_i('z', foo);
+	cl_assert_equal_p(NULL, bar);
+	cl_assert_equal_p(NULL, baz);
+	cl_assert_equal_s("actually_final", final);
+}

@@ -85,6 +85,32 @@ INLINE(const adopt_spec *) spec_nextarg(adopt_parser *parser)
 	return NULL;
 }
 
+INLINE(int) spec_is_choice(const adopt_spec *spec)
+{
+	return ((spec + 1)->type &&
+	       ((spec + 1)->usage & ADOPT_USAGE_CHOICE));
+}
+
+/*
+ * If we have a choice with switches and bare arguments, and we see
+ * the switch, then we no longer expect the bare argument.
+ */
+INLINE(void) consume_choices(const adopt_spec *spec, adopt_parser *parser)
+{
+	/* back up to the beginning of the choices */
+	while (spec->type && (spec->usage & ADOPT_USAGE_CHOICE))
+		--spec;
+
+	if (!spec_is_choice(spec))
+		return;
+
+	do {
+		if (spec->type == ADOPT_ARG)
+			parser->arg_idx++;
+		++spec;
+	} while(spec->type && (spec->usage & ADOPT_USAGE_CHOICE));
+}
+
 static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 {
 	const adopt_spec *spec;
@@ -130,6 +156,8 @@ static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 	else
 		opt->status = ADOPT_STATUS_OK;
 
+	consume_choices(opt->spec, parser);
+
 done:
 	return opt->status;
 }
@@ -171,6 +199,8 @@ static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 		opt->status = ADOPT_STATUS_MISSING_VALUE;
 	else
 		opt->status = ADOPT_STATUS_OK;
+
+	consume_choices(opt->spec, parser);
 
 done:
 	return opt->status;
@@ -257,12 +287,6 @@ INLINE(int) spec_included(const adopt_spec **specs, const adopt_spec *spec)
 	}
 
 	return 0;
-}
-
-INLINE(int) spec_is_choice(const adopt_spec *spec)
-{
-	return ((spec + 1)->type &&
-	       ((spec + 1)->usage & ADOPT_USAGE_CHOICE));
 }
 
 static adopt_status_t validate_required(

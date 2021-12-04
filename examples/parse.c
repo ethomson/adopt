@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	size_t i;
 
 	if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) != 0) {
-		adopt_status_fprint(stderr, &result);
+		adopt_status_fprint(stderr, argv[0], &result);
 		adopt_usage_fprint(stderr, argv[0], opt_specs);
 		return 129;
 	}

@@ -242,11 +242,13 @@ adopt_status_t adopt_parse(
  * specified, or when an argument was specified without a value.
  *
  * @param file The file to print information to
+ * @param command The name of the command to use when printing (optional)
  * @param opt The option that failed to parse
  * @return 0 on success, -1 on failure
  */
 int adopt_status_fprint(
 	FILE *file,
+	const char *command,
 	const adopt_opt *opt);
 
 /**

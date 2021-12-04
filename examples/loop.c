@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 
 	while (adopt_parser_next(&opt, &parser)) {
 		if (opt.status != ADOPT_STATUS_OK) {
-			adopt_status_fprint(stderr, &opt);
+			adopt_status_fprint(stderr, argv[0], &opt);
 			adopt_usage_fprint(stderr, argv[0], opt_specs);
 			return 129;
 		}

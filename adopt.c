@@ -355,23 +355,27 @@ static int spec_name_fprint(FILE *file, const adopt_spec *spec)
 
 int adopt_status_fprint(
 	FILE *file,
+	const char *command,
 	const adopt_opt *opt)
 {
 	const adopt_spec *choice;
 	int error;
 
+	if (command && (error = fprintf(file, "%s: ", command)) < 0)
+		return error;
+
 	switch (opt->status) {
 	case ADOPT_STATUS_DONE:
-		error = fprintf(file, "Finished processing arguments (no error)\n");
+		error = fprintf(file, "finished processing arguments (no error)\n");
 		break;
 	case ADOPT_STATUS_OK:
-		error = fprintf(file, "No error\n");
+		error = fprintf(file, "no error\n");
 		break;
 	case ADOPT_STATUS_UNKNOWN_OPTION:
-		error = fprintf(file, "Unknown option: %s\n", opt->arg);
+		error = fprintf(file, "unknown option: %s\n", opt->arg);
 		break;
 	case ADOPT_STATUS_MISSING_VALUE:
-		if ((error = fprintf(file, "Argument '")) < 0 ||
+		if ((error = fprintf(file, "argument '")) < 0 ||
 		    (error = spec_name_fprint(file, opt->spec)) < 0 ||
 		    (error = fprintf(file, "' requires a value.\n")) < 0)
 			;
@@ -380,7 +384,12 @@ int adopt_status_fprint(
 		if (spec_is_choice(opt->spec)) {
 			int is_choice = 1;
 
-			if ((error = fprintf(file, "One argument of")) < 0)
+			if (spec_is_choice((opt->spec)+1))
+				error = fprintf(file, "one of");
+			else
+				error = fprintf(file, "either");
+
+			if (error < 0)
 				break;
 
 			for (choice = opt->spec; is_choice; ++choice) {
@@ -405,7 +414,7 @@ int adopt_status_fprint(
 			    (error = fprintf(file, " is required.\n")) < 0)
 				break;
 		} else {
-			if ((error = fprintf(file, "Argument '")) < 0 ||
+			if ((error = fprintf(file, "argument '")) < 0 ||
 			    (error = spec_name_fprint(file, opt->spec)) < 0 ||
 			    (error = fprintf(file, "' is required.\n")) < 0)
 				break;

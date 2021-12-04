@@ -21,7 +21,7 @@ adopt_spec opt_specs[] = {
 	{ ADOPT_BOOL, "verbose", 'v', &verbose, 0,
       NULL, "Turn on verbose information", 0 },
 	{ ADOPT_SWITCH, "quiet", 'q', &volume, 0,
-	  NULL, "Emit no output", 0 },
+	  NULL, "Emit no output", ADOPT_USAGE_REQUIRED },
 	{ ADOPT_SWITCH, "loud", 'l', &volume, 2,
 	  NULL, "Emit louder than usual output", ADOPT_USAGE_CHOICE },
 	{ ADOPT_VALUE, "channel", 'c', &channel, 0,

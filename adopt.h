@@ -142,6 +142,9 @@ typedef enum {
 	 * was provided.
 	 */
 	ADOPT_STATUS_MISSING_VALUE = 3,
+
+	/** A required argument was not provided. */
+	ADOPT_STATUS_MISSING_ARGUMENT = 4,
 } adopt_status_t;
 
 /** An option provided on the command-line. */

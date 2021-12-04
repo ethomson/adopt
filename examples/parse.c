@@ -19,9 +19,9 @@ static char **other = NULL;
 
 adopt_spec opt_specs[] = {
 	{ ADOPT_BOOL, "verbose", 'v', &verbose, 0,
-      NULL, "Turn on verbose information", 0 },
+	  NULL, "Turn on verbose information", 0 },
 	{ ADOPT_SWITCH, "quiet", 'q', &volume, 0,
-	  NULL, "Emit no output", 0 },
+	  NULL, "Emit no output", ADOPT_USAGE_REQUIRED },
 	{ ADOPT_SWITCH, "loud", 'l', &volume, 2,
 	  NULL, "Emit louder than usual output", ADOPT_USAGE_CHOICE },
 	{ ADOPT_VALUE, "channel", 'c', &channel, 0,
@@ -55,14 +55,8 @@ int main(int argc, char **argv)
 	adopt_opt result;
 	size_t i;
 
-	if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) < 0) {
+	if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) != 0) {
 		adopt_status_fprint(stderr, &result);
-		adopt_usage_fprint(stderr, argv[0], opt_specs);
-		return 129;
-	}
-
-	if (!filename1) {
-		fprintf(stderr, "filename is required\n");
 		adopt_usage_fprint(stderr, argv[0], opt_specs);
 		return 129;
 	}

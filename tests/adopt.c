@@ -755,3 +755,73 @@ void test_adopt__parse_args_implies_literal(void)
 	cl_assert_equal_s("--bar", argz[2]);
 }
 
+void test_adopt__value_required(void)
+{
+	int foo = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "--bar" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 2));
+
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, result.status);
+}
+
+void test_adopt__required_choice_missing(void)
+{
+	int foo = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
+		{ 0 },
+	};
+
+	char *args[] = { "foo", "bar" };
+
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, adopt_parse(&result, specs, args, 2));
+
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, result.status);
+	cl_assert_equal_s("foo", result.spec->name);
+	cl_assert_equal_i('f', result.spec->alias);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(2, result.args_len);
+}
+
+void test_adopt__required_choice_specified(void)
+{
+	int foo = 0;
+	char *bar = NULL, *baz = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_ARG,    "baz",  0,  &baz,  'z', NULL, NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
+		{ 0 },
+	};
+
+	char *args[] = { "--bar" };
+
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, adopt_parse(&result, specs, args, 2));
+
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, result.status);
+	cl_assert_equal_s("baz", result.spec->name);
+	cl_assert_equal_i(0, result.spec->alias);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(0, result.args_len);
+}

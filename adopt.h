@@ -16,35 +16,35 @@
  * The type of argument to be parsed.
  */
 typedef enum {
-	ADOPT_NONE = 0,
+	ADOPT_TYPE_NONE = 0,
 
 	/**
 	 * An argument that, when specified, sets a given value to true.
 	 * This is useful for arguments like "--debug".  The `value` pointer
 	 * in the returned option will be set to `1` when this is set.
 	 */
-	ADOPT_BOOL,
+	ADOPT_TYPE_BOOL,
 
 	/**
 	 * An argument that, when specified, sets the given `value_ptr`
 	 * to the given `value`.
 	 */
-	ADOPT_SWITCH,
+	ADOPT_TYPE_SWITCH,
 
 	/** An argument that has a value ("-nvalue" or "--name value") */
-	ADOPT_VALUE,
+	ADOPT_TYPE_VALUE,
 
 	/** An argument that has an optional value ("-n" or "-n foo") */
-	ADOPT_VALUE_OPTIONAL,
+	ADOPT_TYPE_VALUE_OPTIONAL,
 
 	/** The literal arguments follow specifier, bare "--" */
-	ADOPT_LITERAL,
+	ADOPT_TYPE_LITERAL,
 
 	/** A single "free" argument ("path") */
-	ADOPT_ARG,
+	ADOPT_TYPE_ARG,
 
 	/** Unmatched arguments, a collection of "free" arguments ("paths...") */
-	ADOPT_ARGS,
+	ADOPT_TYPE_ARGS,
 } adopt_type_t;
 
 /**

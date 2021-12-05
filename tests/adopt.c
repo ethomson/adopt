@@ -55,8 +55,8 @@ void test_adopt__empty(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 }
 	};
 
@@ -71,8 +71,8 @@ void test_adopt__args(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 }
 	};
 
@@ -93,8 +93,8 @@ void test_adopt__unknown(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 }
 	};
 
@@ -118,8 +118,8 @@ void test_adopt__returns_unknown_option(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 }
 	};
 
@@ -136,8 +136,8 @@ void test_adopt__long_switches1(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 }
 	};
 
@@ -158,8 +158,8 @@ void test_adopt__long_switches2(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 }
 	};
 
@@ -181,8 +181,8 @@ void test_adopt__long_switches3(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 }
 	};
 
@@ -205,8 +205,8 @@ void test_adopt__long_values1(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
 
@@ -226,8 +226,8 @@ void test_adopt__long_values2(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
 
@@ -247,8 +247,8 @@ void test_adopt__long_values3(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
 
@@ -269,8 +269,8 @@ void test_adopt__long_values4(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
 
@@ -290,8 +290,8 @@ void test_adopt__long_values5(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 0, &bar, 0 },
 		{ 0 }
 	};
 
@@ -311,8 +311,8 @@ void test_adopt__returns_missing_value(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE, "foo", 'f', &foo, 0 },
-		{ ADOPT_VALUE, "bar", 'b', &bar, 0 },
+		{ ADOPT_TYPE_VALUE, "foo", 'f', &foo, 0 },
+		{ ADOPT_TYPE_VALUE, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
 	char *missing1[] = { "--foo" };
@@ -329,8 +329,8 @@ void test_adopt__short_switches2(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 'b', &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 'b', &bar, 'b' },
 		{ 0 }
 	};
 
@@ -351,8 +351,8 @@ void test_adopt__short_switches3(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 'b', &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 'b', &bar, 'b' },
 		{ 0 }
 	};
 
@@ -375,8 +375,8 @@ void test_adopt__short_values1(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
 
@@ -396,8 +396,8 @@ void test_adopt__short_values2(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
 
@@ -417,8 +417,8 @@ void test_adopt__short_values3(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
 
@@ -439,8 +439,8 @@ void test_adopt__short_values4(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
 
@@ -460,8 +460,8 @@ void test_adopt__short_values5(void)
 	char *foo = NULL, *bar = NULL;
 
 	adopt_spec specs[] = {
-		{ ADOPT_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
-		{ ADOPT_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "foo", 'f', &foo, 0 },
+		{ ADOPT_TYPE_VALUE_OPTIONAL, "bar", 'b', &bar, 0 },
 		{ 0 }
 	};
 
@@ -481,9 +481,9 @@ void test_adopt__literal(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 0, &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
-		{ ADOPT_LITERAL },
+		{ ADOPT_TYPE_SWITCH, "foo", 0, &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_LITERAL },
 		{ 0 }
 	};
 
@@ -505,8 +505,8 @@ void test_adopt__no_long_argument(void)
 	int foo = 0, bar = 0;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, NULL, 'f', &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, NULL, 'f', &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 },
 	};
 
@@ -528,8 +528,8 @@ void test_adopt__parse_oneshot(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, NULL, 'f', &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, NULL, 'f', &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 },
 	};
 
@@ -551,8 +551,8 @@ void test_adopt__parse_oneshot_unknown_option(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, NULL, 'f', &foo, 'f' },
-		{ ADOPT_SWITCH, "bar", 0, &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, NULL, 'f', &foo, 'f' },
+		{ ADOPT_TYPE_SWITCH, "bar", 0, &bar, 'b' },
 		{ 0 },
 	};
 
@@ -568,8 +568,8 @@ void test_adopt__parse_oneshot_missing_value(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, NULL, 'f', &foo, 'f' },
-		{ ADOPT_VALUE,  "bar", 0,  &bar, 'b' },
+		{ ADOPT_TYPE_SWITCH, NULL, 'f', &foo, 'f' },
+		{ ADOPT_TYPE_VALUE,  "bar", 0,  &bar, 'b' },
 		{ 0 },
 	};
 
@@ -585,10 +585,10 @@ void test_adopt__parse_arg(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
-		{ ADOPT_ARG,    "arg1", 0,  &arg1,  0  },
-		{ ADOPT_ARG,    "arg2", 0,  &arg2,  0  },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_TYPE_ARG,    "arg1", 0,  &arg1,  0  },
+		{ ADOPT_TYPE_ARG,    "arg2", 0,  &arg2,  0  },
 		{ 0 },
 	};
 
@@ -613,10 +613,10 @@ void test_adopt__parse_arg_mixed_with_switches(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
-		{ ADOPT_ARG,    "arg1", 0,  &arg1,  0  },
-		{ ADOPT_SWITCH, "bar",  0,  &bar,  'b' },
-		{ ADOPT_ARG,    "arg2", 0,  &arg2,  0  },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_ARG,    "arg1", 0,  &arg1,  0  },
+		{ ADOPT_TYPE_SWITCH, "bar",  0,  &bar,  'b' },
+		{ ADOPT_TYPE_ARG,    "arg2", 0,  &arg2,  0  },
 		{ 0 },
 	};
 
@@ -641,11 +641,11 @@ void test_adopt__parse_arg_with_literal(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
-		{ ADOPT_LITERAL },
-		{ ADOPT_ARG,    "arg1", 0,  &arg1,  0  },
-		{ ADOPT_ARG,    "arg2", 0,  &arg2,  0  },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_TYPE_LITERAL },
+		{ ADOPT_TYPE_ARG,    "arg1", 0,  &arg1,  0  },
+		{ ADOPT_TYPE_ARG,    "arg2", 0,  &arg2,  0  },
 		{ 0 },
 	};
 
@@ -670,9 +670,9 @@ void test_adopt__parse_args(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
-		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
 		{ 0 },
 	};
 
@@ -701,10 +701,10 @@ void test_adopt__parse_args_with_literal(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
-		{ ADOPT_LITERAL },
-		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_TYPE_LITERAL },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
 		{ 0 },
 	};
 
@@ -732,9 +732,9 @@ void test_adopt__parse_args_implies_literal(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
-		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
 		{ 0 },
 	};
 
@@ -762,9 +762,9 @@ void test_adopt__value_required(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f' },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b' },
-		{ ADOPT_ARGS,   "argz", 0,  &argz,  0  },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b' },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
 		{ 0 },
 	};
 
@@ -782,9 +782,9 @@ void test_adopt__required_choice_missing(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
 		{ 0 },
 	};
 
@@ -807,10 +807,10 @@ void test_adopt__required_choice_specified(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
-		{ ADOPT_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_ARG,    "baz",  0,  &baz,  'z', NULL, NULL, ADOPT_USAGE_REQUIRED },
-		{ ADOPT_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARG,    "baz",  0,  &baz,  'z', NULL, NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
 		{ 0 },
 	};
 
@@ -833,11 +833,11 @@ void test_adopt__choice_switch_or_arg_advances_arg(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_SWITCH, "foo",  'f', &foo,  'f', NULL, NULL },
-		{ ADOPT_SWITCH, "fooz", 'z', &foo,  'z', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_VALUE,  "bar",   0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_ARG,    "baz",   0,  &baz,   0,  NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_ARG,    "final", 0, &final, 0,  NULL, NULL, 0 },
+		{ ADOPT_TYPE_SWITCH, "foo",  'f', &foo,  'f', NULL, NULL },
+		{ ADOPT_TYPE_SWITCH, "fooz", 'z', &foo,  'z', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_VALUE,  "bar",   0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARG,    "baz",   0,  &baz,   0,  NULL, NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARG,    "final", 0, &final, 0,  NULL, NULL, 0 },
 		{ 0 },
 	};
 

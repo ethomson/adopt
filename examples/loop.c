@@ -18,20 +18,20 @@ static char *filename2 = NULL;
 static char **other = NULL;
 
 adopt_spec opt_specs[] = {
-	{ ADOPT_BOOL, "verbose", 'v', &verbose, 0,
-      NULL, "Turn on verbose information", 0 },
-	{ ADOPT_SWITCH, "quiet", 'q', &volume, 0,
+	{ ADOPT_TYPE_BOOL, "verbose", 'v', &verbose, 0,
+	  NULL, "Turn on verbose information", 0 },
+	{ ADOPT_TYPE_SWITCH, "quiet", 'q', &volume, 0,
 	  NULL, "Emit no output", ADOPT_USAGE_REQUIRED },
-	{ ADOPT_SWITCH, "loud", 'l', &volume, 2,
+	{ ADOPT_TYPE_SWITCH, "loud", 'l', &volume, 2,
 	  NULL, "Emit louder than usual output", ADOPT_USAGE_CHOICE },
-	{ ADOPT_VALUE, "channel", 'c', &channel, 0,
+	{ ADOPT_TYPE_VALUE, "channel", 'c', &channel, 0,
 	  "channel", "Set the channel", 0 },
-	{ ADOPT_LITERAL },
-	{ ADOPT_ARG, NULL, 0, &filename1, 0,
+	{ ADOPT_TYPE_LITERAL },
+	{ ADOPT_TYPE_ARG, NULL, 0, &filename1, 0,
 	  "file1", "The first filename", ADOPT_USAGE_REQUIRED },
-	{ ADOPT_ARG, NULL, 0, &filename2, 0,
+	{ ADOPT_TYPE_ARG, NULL, 0, &filename2, 0,
 	  "file2", "The second (optional) filename", 0 },
-	{ ADOPT_ARGS, NULL, 0, &other, 0,
+	{ ADOPT_TYPE_ARGS, NULL, 0, &other, 0,
 	  "other", "The other (optional) arguments", 0 },
 	{ 0 }
 };

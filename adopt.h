@@ -48,8 +48,8 @@ typedef enum {
 } adopt_type_t;
 
 /**
- * Usage information for an argument, to be displayed to the end-user.
- * This is only for display, the parser ignores this usage information.
+ * Additional information about an option, including parsing
+ * restrictions and usage information to be displayed to the end-user.
  */
 typedef enum {
 	/** This argument is required. */
@@ -77,26 +77,27 @@ typedef struct adopt_spec {
 	const char alias;
 
 	/**
-	 * If this spec is of type `ADOPT_BOOL`, this is a pointer to
-	 * an `int` that will be set to `1` if the option is specified.
+	 * If this spec is of type `ADOPT_TYPE_BOOL`, this is a pointer
+	 * to an `int` that will be set to `1` if the option is specified.
 	 *
-	 * If this spec is of type `ADOPT_SWITCH`, this is a pointer to
-	 * an `int` that will be set to the opt's `value` (below) when
+	 * If this spec is of type `ADOPT_TYPE_SWITCH`, this is a pointer
+	 * to an `int` that will be set to the opt's `value` (below) when
 	 * this option is specified.
 	 *
-	 * If this spec is of type `ADOPT_VALUE` or `ADOPT_VALUE_OPTIONAL`,
-	 * this is a pointer to a `char *`, that will be set to the value
+	 * If this spec is of type `ADOPT_TYPE_VALUE`,
+	 * `ADOPT_TYPE_VALUE_OPTIONAL`, or `ADOPT_TYPE_ARG`, this is
+	 * a pointer to a `char *` that will be set to the value
 	 * specified on the command line.
 	 *
-	 * If this spec is of type `ADOPT_VALUES`, this is a pointer to a
-	 * `char **` that will be set to the remaining values specified on
-	 * the command line.
+	 * If this spec is of type `ADOPT_TYPE_ARGS`, this is a pointer
+	 * to a `char **` that will be set to the remaining values
+	 * specified on the command line.
 	 */
 	void *value;
 
 	/**
-	 * If this spec is of type `ADOPT_SWITCH`, this is the value to
-	 * set in the option's `value_ptr` pointer when it is specified.
+	 * If this spec is of type `ADOPT_TYPE_SWITCH`, this is the value
+	 * to set in the option's `value_ptr` pointer when it is specified.
 	 * This is ignored for other opt types.
 	 */
 	int switch_value;
@@ -104,20 +105,22 @@ typedef struct adopt_spec {
 	/**
 	 * The name of the value, provided when creating usage information.
 	 * This is required only for the functions that display usage
-	 * information and only when a spec is of type `ADOPT_VALUE`.
+	 * information and only when a spec is of type `ADOPT_TYPE_VALUE,
+	 * `ADOPT_TYPE_ARG` or `ADOPT_TYPE_ARGS``.
 	 */
 	const char *value_name;
 
 	/**
-	 * Short description of the option, used when creating usage
-	 * information.  This is only used when creating usage information.
+	 * Optional usage flags that change parsing behavior and how
+	 * usage information is shown to the end-user.
 	 */
-	const char *help;
+	uint32_t usage;
 
 	/**
-	 * Optional `adopt_usage_t`, used when creating usage information.
+	 * Optional short description of the option to display to the
+	 * end-user.  This is only used when creating usage information.
 	 */
-	adopt_usage_t usage;
+	const char *help;
 } adopt_spec;
 
 /** Return value for `adopt_parser_next`. */

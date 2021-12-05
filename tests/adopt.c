@@ -782,9 +782,9 @@ void test_adopt__required_choice_missing(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
-		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f', NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b', NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0,  NULL, 0 },
 		{ 0 },
 	};
 
@@ -807,10 +807,10 @@ void test_adopt__required_choice_specified(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f', NULL, NULL, ADOPT_USAGE_REQUIRED },
-		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_TYPE_ARG,    "baz",  0,  &baz,  'z', NULL, NULL, ADOPT_USAGE_REQUIRED },
-		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0,  NULL, NULL, 0 },
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f', NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b', NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARG,    "baz",  0,  &baz,  'z', NULL, ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0,  NULL, 0 },
 		{ 0 },
 	};
 
@@ -833,11 +833,11 @@ void test_adopt__choice_switch_or_arg_advances_arg(void)
 	adopt_opt result;
 
 	adopt_spec specs[] = {
-		{ ADOPT_TYPE_SWITCH, "foo",  'f', &foo,  'f', NULL, NULL },
-		{ ADOPT_TYPE_SWITCH, "fooz", 'z', &foo,  'z', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_TYPE_VALUE,  "bar",   0,  &bar,  'b', NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_TYPE_ARG,    "baz",   0,  &baz,   0,  NULL, NULL, ADOPT_USAGE_CHOICE },
-		{ ADOPT_TYPE_ARG,    "final", 0, &final, 0,  NULL, NULL, 0 },
+		{ ADOPT_TYPE_SWITCH, "foo",  'f', &foo,  'f', NULL, 0 },
+		{ ADOPT_TYPE_SWITCH, "fooz", 'z', &foo,  'z', NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_VALUE,  "bar",   0,  &bar,  'b', NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARG,    "baz",   0,  &baz,   0,  NULL, ADOPT_USAGE_CHOICE },
+		{ ADOPT_TYPE_ARG,    "final", 0,  &final, 0,  NULL, 0 },
 		{ 0 },
 	};
 

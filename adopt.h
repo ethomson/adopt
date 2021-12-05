@@ -34,9 +34,6 @@ typedef enum {
 	/** An argument that has a value ("-nvalue" or "--name value") */
 	ADOPT_TYPE_VALUE,
 
-	/** An argument that has an optional value ("-n" or "-n foo") */
-	ADOPT_TYPE_VALUE_OPTIONAL,
-
 	/** The literal arguments follow specifier, bare "--" */
 	ADOPT_TYPE_LITERAL,
 
@@ -55,14 +52,22 @@ typedef enum {
 	/** This argument is required. */
 	ADOPT_USAGE_REQUIRED = (1u << 0),
 
-	/** This argument should not be displayed in usage. */
-	ADOPT_USAGE_HIDDEN = (1u << 1),
+	/**
+	 * This is a multiple choice argument, combined with the previous
+	 * argument.  For example, when the previous argument is `-f` and
+	 * this optional is applied to an argument of type `-b` then one
+	 * of `-f` or `-b` may be specified.
+	 */
+	ADOPT_USAGE_CHOICE = (1u << 1),
 
-	/** This is a multiple choice argument, combined with the previous arg. */
-	ADOPT_USAGE_CHOICE = (1u << 2),
+	/** The argument's value is optional ("-n" or "-n foo") */
+	ADOPT_USAGE_VALUE_OPTIONAL = (1u << 2),
+
+	/** This argument should not be displayed in usage. */
+	ADOPT_USAGE_HIDDEN = (1u << 3),
 
 	/** In usage, show the long format instead of the abbreviated format. */
-	ADOPT_USAGE_SHOW_LONG = (1u << 3),
+	ADOPT_USAGE_SHOW_LONG = (1u << 4),
 } adopt_usage_t;
 
 /** Specification for an available option. */
@@ -103,18 +108,18 @@ typedef struct adopt_spec {
 	int switch_value;
 
 	/**
+	 * Optional usage flags that change parsing behavior and how
+	 * usage information is shown to the end-user.
+	 */
+	uint32_t usage;
+
+	/**
 	 * The name of the value, provided when creating usage information.
 	 * This is required only for the functions that display usage
 	 * information and only when a spec is of type `ADOPT_TYPE_VALUE,
 	 * `ADOPT_TYPE_ARG` or `ADOPT_TYPE_ARGS``.
 	 */
 	const char *value_name;
-
-	/**
-	 * Optional usage flags that change parsing behavior and how
-	 * usage information is shown to the end-user.
-	 */
-	uint32_t usage;
 
 	/**
 	 * Optional short description of the option to display to the

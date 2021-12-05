@@ -131,6 +131,73 @@ void test_adopt__returns_unknown_option(void)
 	cl_assert_equal_i(ADOPT_STATUS_UNKNOWN_OPTION, status);
 }
 
+void test_adopt__bool(void)
+{
+	int foo = 0, bar = 0;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_BOOL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_BOOL, "bar", 0, &bar, 0 },
+		{ 0 }
+	};
+
+	char *args[] = { "--foo", "-b" };
+	adopt_expected expected[] = {
+		{ &specs[0], NULL },
+		{ NULL, "-b" },
+	};
+
+	/* Parse an arg list with only bare arguments */
+	test_parse(specs, args, 2, expected, 2);
+	cl_assert_equal_i(1, foo);
+	cl_assert_equal_i(0, bar);
+}
+
+void test_adopt__bool_converse(void)
+{
+	int foo = 1, bar = 0;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_BOOL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_BOOL, "bar", 0, &bar, 0 },
+		{ 0 }
+	};
+
+	char *args[] = { "--no-foo", "--bar" };
+	adopt_expected expected[] = {
+		{ &specs[0], NULL },
+		{ &specs[1], NULL },
+	};
+
+	/* Parse an arg list with only bare arguments */
+	test_parse(specs, args, 2, expected, 2);
+	cl_assert_equal_i(0, foo);
+	cl_assert_equal_i(1, bar);
+}
+
+void test_adopt__bool_converse_overrides(void)
+{
+	int foo = 0, bar = 0;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_BOOL, "foo", 0, &foo, 0 },
+		{ ADOPT_TYPE_BOOL, "bar", 0, &bar, 0 },
+		{ 0 }
+	};
+
+	char *args[] = { "--foo", "--bar", "--no-foo" };
+	adopt_expected expected[] = {
+		{ &specs[0], NULL },
+		{ &specs[1], NULL },
+		{ &specs[0], NULL },
+	};
+
+	/* Parse an arg list with only bare arguments */
+	test_parse(specs, args, 3, expected, 3);
+	cl_assert_equal_i(0, foo);
+	cl_assert_equal_i(1, bar);
+}
+
 void test_adopt__long_switches1(void)
 {
 	int foo = 0, bar = 0;

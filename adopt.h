@@ -20,8 +20,11 @@ typedef enum {
 
 	/**
 	 * An argument that, when specified, sets a given value to true.
-	 * This is useful for arguments like "--debug".  The `value` pointer
-	 * in the returned option will be set to `1` when this is set.
+	 * This is useful for arguments like "--debug".  A converse
+	 * argument (beginning with "no-") is implicitly specified; for
+	 * example "--no-debug".  The `value` pointer in the returned
+	 * option will be set to `1` when this is specified, and set to
+	 * `0` when the converse "no-" argument is specified.
 	 */
 	ADOPT_TYPE_BOOL,
 

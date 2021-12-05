@@ -32,18 +32,32 @@
 	 (x)->type == ADOPT_TYPE_VALUE)
 
 INLINE(const adopt_spec *) spec_byname(
-	adopt_parser *parser, const char *name, size_t namelen)
+	adopt_parser *parser,
+	const char *name,
+	size_t namelen,
+	int *is_converse)
 {
 	const adopt_spec *spec;
+
+	*is_converse = 0;
 
 	for (spec = parser->specs; spec->type; ++spec) {
 		if (spec->type == ADOPT_TYPE_LITERAL && namelen == 0)
 			return spec;
 
+		/* Handle "no-" prefix for boolean types */
+		if (spec->type == ADOPT_TYPE_BOOL &&
+		    strlen(spec->name) + 3 == namelen &&
+		    strncmp(name, "no-", 3) == 0 &&
+		    strncmp(name + 3, spec->name, namelen) == 0) {
+			*is_converse = 1;
+			return spec;
+		}
+
 		if (spec_is_named_type(spec) &&
-			spec->name &&
-			strlen(spec->name) == namelen &&
-			strncmp(name, spec->name, namelen) == 0)
+		    spec->name &&
+		    strlen(spec->name) == namelen &&
+		    strncmp(name, spec->name, namelen) == 0)
 			return spec;
 	}
 
@@ -114,13 +128,14 @@ static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 {
 	const adopt_spec *spec;
 	char *arg = parser->args[parser->idx++], *name = arg + 2, *eql;
+	int converse = 0;
 	size_t namelen;
 
 	namelen = (eql = strrchr(arg, '=')) ? (size_t)(eql - name) : strlen(name);
 
 	opt->arg = arg;
 
-	if ((spec = spec_byname(parser, name, namelen)) == NULL) {
+	if ((spec = spec_byname(parser, name, namelen, &converse)) == NULL) {
 		opt->spec = NULL;
 		opt->status = ADOPT_STATUS_UNKNOWN_OPTION;
 		goto done;
@@ -132,14 +147,14 @@ static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 	if (spec->type == ADOPT_TYPE_LITERAL)
 		parser->in_literal = 1;
 
-	if (spec->type == ADOPT_TYPE_BOOL && spec->value)
-		*((int *)spec->value) = 1;
+	else if (spec->type == ADOPT_TYPE_BOOL && spec->value)
+		*((int *)spec->value) = !converse;
 
-	if (spec->type == ADOPT_TYPE_SWITCH && spec->value)
+	else if (spec->type == ADOPT_TYPE_SWITCH && spec->value)
 		*((int *)spec->value) = spec->switch_value;
 
 	/* Parse values as "--foo=bar" or "--foo bar" */
-	if (spec->type == ADOPT_TYPE_VALUE) {
+	else if (spec->type == ADOPT_TYPE_VALUE) {
 		if (eql && *(eql+1))
 			opt->value = eql + 1;
 		else if ((parser->idx + 1) <= parser->args_len)

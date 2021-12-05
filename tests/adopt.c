@@ -922,3 +922,31 @@ void test_adopt__choice_switch_or_arg_advances_arg(void)
 	cl_assert_equal_p(NULL, baz);
 	cl_assert_equal_s("actually_final", final);
 }
+
+void test_adopt__stop(void)
+{
+	int foo = 0, bar = 0, help = 0, baz = 0;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_SWITCH, "foo",  'f', &foo,  'f', ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_SWITCH, "bar",   0,  &bar,  'b', ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_SWITCH, "help",  0,  &help, 'h', ADOPT_USAGE_STOP_PARSING },
+		{ ADOPT_TYPE_SWITCH, "baz",   0,  &baz,  'z', ADOPT_USAGE_REQUIRED },
+		{ 0 },
+	};
+
+	char *args[] = { "-f", "--help", "-z" };
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, adopt_parse(&result, specs, args, 2));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_s("--help", result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(0, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_p('h', help);
+	cl_assert_equal_p(0,   bar);
+	cl_assert_equal_p(0,   baz);
+}

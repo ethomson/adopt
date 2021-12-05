@@ -369,6 +369,9 @@ adopt_status_t adopt_parse(
 		    opt->status != ADOPT_STATUS_DONE)
 			return opt->status;
 
+		if ((opt->spec->usage & ADOPT_USAGE_STOP_PARSING))
+			return (opt->status = ADOPT_STATUS_DONE);
+
 		given_specs[given_idx++] = opt->spec;
 	}
 

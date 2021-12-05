@@ -52,6 +52,9 @@ typedef enum {
  * restrictions and usage information to be displayed to the end-user.
  */
 typedef enum {
+	/** Defaults for the argument. */
+	ADOPT_USAGE_DEFAULT  = 0,
+
 	/** This argument is required. */
 	ADOPT_USAGE_REQUIRED = (1u << 0),
 
@@ -63,14 +66,20 @@ typedef enum {
 	 */
 	ADOPT_USAGE_CHOICE = (1u << 1),
 
+	/**
+	 * This argument short-circuits the remainder of parsing.
+	 * Useful for arguments like `--help`.
+	 */
+	ADOPT_USAGE_STOP_PARSING = (1u << 2),
+
 	/** The argument's value is optional ("-n" or "-n foo") */
-	ADOPT_USAGE_VALUE_OPTIONAL = (1u << 2),
+	ADOPT_USAGE_VALUE_OPTIONAL = (1u << 3),
 
 	/** This argument should not be displayed in usage. */
-	ADOPT_USAGE_HIDDEN = (1u << 3),
+	ADOPT_USAGE_HIDDEN = (1u << 4),
 
 	/** In usage, show the long format instead of the abbreviated format. */
-	ADOPT_USAGE_SHOW_LONG = (1u << 4),
+	ADOPT_USAGE_SHOW_LONG = (1u << 5),
 } adopt_usage_t;
 
 /** Specification for an available option. */

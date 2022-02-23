@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <limits.h>
 #include <assert.h>
 
 #include "adopt.h"
@@ -26,57 +27,87 @@
 # define INLINE(type) static inline type
 #endif
 
-#define spec_is_named_type(x) \
+#define spec_is_option_type(x) \
 	((x)->type == ADOPT_TYPE_BOOL || \
 	 (x)->type == ADOPT_TYPE_SWITCH || \
 	 (x)->type == ADOPT_TYPE_VALUE)
 
-INLINE(const adopt_spec *) spec_byname(
-	adopt_parser *parser,
-	const char *name,
-	size_t namelen,
-	int *is_converse)
+INLINE(const adopt_spec *) spec_for_long(
+	int *is_negated,
+	int *has_value,
+	const char **value,
+	const adopt_parser *parser,
+	const char *arg)
 {
 	const adopt_spec *spec;
+	char *eql;
+	size_t eql_pos;
 
-	*is_converse = 0;
+	arg += 2;
+	eql = strrchr(arg, '=');
+	eql_pos = (eql = strrchr(arg, '=')) ? (size_t)(eql - arg) : strlen(arg);
 
 	for (spec = parser->specs; spec->type; ++spec) {
-		if (spec->type == ADOPT_TYPE_LITERAL && namelen == 0)
+		/* Handle -- (everything after this is literal) */
+		if (spec->type == ADOPT_TYPE_LITERAL && arg[0] == '\0')
 			return spec;
 
-		/* Handle "no-" prefix for boolean types */
+		/* Handle --no-option arguments for bool types */
 		if (spec->type == ADOPT_TYPE_BOOL &&
-		    strlen(spec->name) + 3 == namelen &&
-		    strncmp(name, "no-", 3) == 0 &&
-		    strncmp(name + 3, spec->name, namelen) == 0) {
-			*is_converse = 1;
+		    strncmp(arg, "no-", 3) == 0 &&
+		    strcmp(arg + 3, spec->name) == 0) {
+			*is_negated = 1;
 			return spec;
 		}
 
-		if (spec_is_named_type(spec) &&
+		/* Handle the typical --option arguments */
+		if (spec_is_option_type(spec) &&
 		    spec->name &&
-		    strlen(spec->name) == namelen &&
-		    strncmp(name, spec->name, namelen) == 0)
+		    strcmp(arg, spec->name) == 0)
 			return spec;
+
+		/* Handle --option=value arguments */
+		if (spec->type == ADOPT_TYPE_VALUE &&
+		    eql &&
+		    strncmp(arg, spec->name, eql_pos) == 0 &&
+		    spec->name[eql_pos] == '\0') {
+			*has_value = 1;
+			*value = arg[eql_pos + 1] ? &arg[eql_pos + 1] : NULL;
+			return spec;
+		}
 	}
 
 	return NULL;
 }
 
-INLINE(const adopt_spec *) spec_byalias(adopt_parser *parser, char alias)
+INLINE(const adopt_spec *) spec_for_short(
+	const char **value,
+	const adopt_parser *parser,
+	const char *arg)
 {
 	const adopt_spec *spec;
 
 	for (spec = parser->specs; spec->type; ++spec) {
-		if (spec_is_named_type(spec) && alias == spec->alias)
+		/* Handle -svalue short options with a value */
+		if (spec->type == ADOPT_TYPE_VALUE &&
+		    arg[1] == spec->alias &&
+		    arg[2] != '\0') {
+			*value = &arg[2];
 			return spec;
+		}
+
+		/* Handle typical -s short options */
+		if (arg[1] == spec->alias &&
+		    arg[2] == '\0') {
+			*value = NULL;
+			return spec;
+		}
 	}
 
 	return NULL;
 }
 
-INLINE(const adopt_spec *) spec_nextarg(adopt_parser *parser)
+INLINE(const adopt_spec *) spec_for_arg(adopt_parser *parser)
 {
 	const adopt_spec *spec;
 	size_t args = 0;
@@ -127,15 +158,13 @@ INLINE(void) consume_choices(const adopt_spec *spec, adopt_parser *parser)
 static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 {
 	const adopt_spec *spec;
-	char *arg = parser->args[parser->idx++], *name = arg + 2, *eql;
-	int converse = 0;
-	size_t namelen;
-
-	namelen = (eql = strrchr(arg, '=')) ? (size_t)(eql - name) : strlen(name);
+	char *arg = parser->args[parser->idx++];
+	const char *value = NULL;
+	int is_negated = 0, has_value = 0;
 
 	opt->arg = arg;
 
-	if ((spec = spec_byname(parser, name, namelen, &converse)) == NULL) {
+	if ((spec = spec_for_long(&is_negated, &has_value, &value, parser, arg)) == NULL) {
 		opt->spec = NULL;
 		opt->status = ADOPT_STATUS_UNKNOWN_OPTION;
 		goto done;
@@ -147,16 +176,18 @@ static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 	if (spec->type == ADOPT_TYPE_LITERAL)
 		parser->in_literal = 1;
 
+	/* --bool or --no-bool */
 	else if (spec->type == ADOPT_TYPE_BOOL && spec->value)
-		*((int *)spec->value) = !converse;
+		*((int *)spec->value) = !is_negated;
 
+	/* --switch */
 	else if (spec->type == ADOPT_TYPE_SWITCH && spec->value)
 		*((int *)spec->value) = spec->switch_value;
 
 	/* Parse values as "--foo=bar" or "--foo bar" */
 	else if (spec->type == ADOPT_TYPE_VALUE) {
-		if (eql && *(eql+1))
-			opt->value = eql + 1;
+		if (has_value)
+			opt->value = (char *)value;
 		else if ((parser->idx + 1) <= parser->args_len)
 			opt->value = parser->args[parser->idx++];
 
@@ -181,11 +212,12 @@ done:
 static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 {
 	const adopt_spec *spec;
-	char *arg = parser->args[parser->idx++], alias = *(arg + 1);
+	char *arg = parser->args[parser->idx++];
+	const char *value;
 
 	opt->arg = arg;
 
-	if ((spec = spec_byalias(parser, alias)) == NULL) {
+	if ((spec = spec_for_short(&value, parser, arg)) == NULL) {
 		opt->spec = NULL;
 		opt->status = ADOPT_STATUS_UNKNOWN_OPTION;
 		goto done;
@@ -201,8 +233,8 @@ static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 
 	/* Parse values as "-ifoo" or "-i foo" */
 	if (spec->type == ADOPT_TYPE_VALUE) {
-		if (strlen(arg) > 2)
-			opt->value = arg + 2;
+		if (value)
+			opt->value = (char *)value;
 		else if ((parser->idx + 1) <= parser->args_len)
 			opt->value = parser->args[parser->idx++];
 
@@ -224,7 +256,7 @@ done:
 
 static adopt_status_t parse_arg(adopt_opt *opt, adopt_parser *parser)
 {
-	const adopt_spec *spec = spec_nextarg(parser);
+	const adopt_spec *spec = spec_for_arg(parser);
 
 	opt->spec = spec;
 	opt->arg = parser->args[parser->idx];
@@ -236,7 +268,10 @@ static adopt_status_t parse_arg(adopt_opt *opt, adopt_parser *parser)
 		if (spec->value)
 			*((char ***)spec->value) = &parser->args[parser->idx];
 
-		/* Args consume all the remaining arguments. */
+		/*
+		 * We have started a list of arguments; the remainder of
+		 * given arguments need not be examined.
+		 */
 		parser->in_args = (parser->args_len - parser->idx);
 		parser->idx = parser->args_len;
 		opt->args_len = parser->in_args;
@@ -252,11 +287,32 @@ static adopt_status_t parse_arg(adopt_opt *opt, adopt_parser *parser)
 	return opt->status;
 }
 
+static int support_gnu_style(unsigned int flags)
+{
+	if ((flags & ADOPT_PARSE_FORCE_GNU) != 0)
+		return 1;
+
+	if ((flags & ADOPT_PARSE_GNU) == 0)
+		return 0;
+
+	/* TODO: Windows */
+#if defined(_WIN32) && defined(UNICODE)
+	if (_wgetenv(L"POSIXLY_CORRECT") != NULL)
+		return 0;
+#else
+	if (getenv("POSIXLY_CORRECT") != NULL)
+		return 0;
+#endif
+
+	return 1;
+}
+
 void adopt_parser_init(
 	adopt_parser *parser,
 	const adopt_spec specs[],
 	char **args,
-	size_t args_len)
+	size_t args_len,
+	unsigned int flags)
 {
 	assert(parser);
 
@@ -265,6 +321,103 @@ void adopt_parser_init(
 	parser->specs = specs;
 	parser->args = args;
 	parser->args_len = args_len;
+	parser->flags = flags;
+
+	parser->needs_sort = support_gnu_style(flags);
+}
+
+INLINE(const adopt_spec *) spec_for_sort(
+	int *needs_value,
+	const adopt_parser *parser,
+	const char *arg)
+{
+	int is_negated, has_value = 0;
+	const char *value;
+	const adopt_spec *spec = NULL;
+
+	*needs_value = 0;
+
+	if (strncmp(arg, "--", 2) == 0) {
+		spec = spec_for_long(&is_negated, &has_value, &value, parser, arg);
+		*needs_value = !has_value;
+	}
+
+	else if (strncmp(arg, "-", 1) == 0) {
+		spec = spec_for_short(&value, parser, arg);
+		*needs_value = (value == NULL);
+	}
+
+	return spec;
+}
+
+/*
+ * Some parsers allow for handling arguments like "file1 --help file2";
+ * this is done by re-sorting the arguments in-place; emulate that.
+ */
+static int sort_gnu_style(adopt_parser *parser)
+{
+	size_t i, j, insert_idx = parser->idx, offset;
+	const adopt_spec *spec;
+	char *option, *value;
+	int needs_value, changed = 0;
+
+	parser->needs_sort = 0;
+
+	for (i = parser->idx; i < parser->args_len; i++) {
+		spec = spec_for_sort(&needs_value, parser, parser->args[i]);
+
+		/* Not a "-" or "--" prefixed option.  No change. */
+		if (!spec)
+			continue;
+
+		/* A "--" alone means remaining args are literal. */
+		if (spec->type == ADOPT_TYPE_LITERAL)
+			break;
+
+		option = parser->args[i];
+
+		/*
+		 * If the argument is a value type and doesn't already
+		 * have a value (eg "--foo=bar" or "-fbar") then we need
+		 * to copy the next argument as its value.
+		 */
+		if (spec->type == ADOPT_TYPE_VALUE && needs_value) {
+			/*
+			 * A required value is not provided; set parser
+			 * index to this value so that we fail on it.
+			 */
+			if (i + 1 >= parser->args_len) {
+				parser->idx = i;
+				return 1;
+			}
+
+			value = parser->args[i + 1];
+			offset = 1;
+		} else {
+			value = NULL;
+			offset = 0;
+		}
+
+		/* Caller error if args[0] is an option. */
+		if (i == 0)
+			return 0;
+
+		/* Shift args up one (or two) and insert the option */
+		for (j = i; j > insert_idx; j--)
+			parser->args[j + offset] = parser->args[j - 1];
+
+		parser->args[insert_idx] = option;
+
+		if (value)
+			parser->args[insert_idx + 1] = value;
+
+		insert_idx += (1 + offset);
+		i += offset;
+
+		changed = 1;
+	}
+
+	return changed;
 }
 
 adopt_status_t adopt_parser_next(adopt_opt *opt, adopt_parser *parser)
@@ -278,19 +431,26 @@ adopt_status_t adopt_parser_next(adopt_opt *opt, adopt_parser *parser)
 		return ADOPT_STATUS_DONE;
 	}
 
-	/* Handle arguments in long form, those beginning with "--" */
+	/* Handle options in long form, those beginning with "--" */
 	if (strncmp(parser->args[parser->idx], "--", 2) == 0 &&
 		!parser->in_literal)
 		return parse_long(opt, parser);
 
-	/* Handle arguments in short form, those beginning with "-" */
+	/* Handle options in short form, those beginning with "-" */
 	else if (strncmp(parser->args[parser->idx], "-", 1) == 0 &&
 		!parser->in_literal)
 		return parse_short(opt, parser);
 
-	/* Handle "free" arguments, those without a dash */
-	else
-		return parse_arg(opt, parser);
+	/*
+	 * We've reached the first "bare" argument.  In POSIX mode, all
+	 * remaining items on the command line are arguments.  In GNU
+	 * mode, there may be long or short options after this.  Sort any
+	 * options up to this position then re-parse the current position.
+	 */
+	if (parser->needs_sort && sort_gnu_style(parser))
+		return adopt_parser_next(opt, parser);
+
+	return parse_arg(opt, parser);
 }
 
 INLINE(int) spec_included(const adopt_spec **specs, const adopt_spec *spec)
@@ -361,7 +521,7 @@ adopt_status_t adopt_parse(
 	const adopt_spec **given_specs;
 	size_t given_idx = 0;
 
-	adopt_parser_init(&parser, specs, args, args_len);
+	adopt_parser_init(&parser, specs, args, args_len, flags);
 
 	given_specs = alloca(sizeof(const adopt_spec *) * (args_len + 1));
 

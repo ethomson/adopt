@@ -17,7 +17,7 @@ static void test_parse(
 	adopt_opt opt;
 	size_t i;
 
-	adopt_parser_init(&parser, specs, args, argslen);
+	adopt_parser_init(&parser, specs, args, argslen, ADOPT_PARSE_DEFAULT);
 
 	for (i = 0; i < expectlen; ++i) {
 		cl_assert(adopt_parser_next(&opt, &parser) > 0);
@@ -44,7 +44,7 @@ static void test_returns_missing_value(
 	adopt_opt opt;
 	adopt_status_t status;
 
-	adopt_parser_init(&parser, specs, args, argslen);
+	adopt_parser_init(&parser, specs, args, argslen, ADOPT_PARSE_DEFAULT);
 
 	status = adopt_parser_next(&opt, &parser);
 	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, status);
@@ -125,7 +125,7 @@ void test_adopt__returns_unknown_option(void)
 
 	char *args[] = { "--unknown-long", "-u" };
 
-	adopt_parser_init(&parser, specs, args, 2);
+	adopt_parser_init(&parser, specs, args, 2, ADOPT_PARSE_DEFAULT);
 
 	status = adopt_parser_next(&opt, &parser);
 	cl_assert_equal_i(ADOPT_STATUS_UNKNOWN_OPTION, status);
@@ -341,14 +341,14 @@ void test_adopt__long_values4(void)
 		{ 0 }
 	};
 
-	char *args4[] = { "--foo=bar" };
+	char *args4[] = { "--foo=--bar" };
 	adopt_expected expected4[] = {
-		{ &specs[0], "bar" },
+		{ &specs[0], "--bar" },
 	};
 
 	/* Parse --foo=bar */
 	test_parse(specs, args4, 1, expected4, 1);
-	cl_assert_equal_s("bar", foo);
+	cl_assert_equal_s("--bar", foo);
 	cl_assert_equal_s(NULL, bar);
 }
 
@@ -822,6 +822,80 @@ void test_adopt__parse_args_implies_literal(void)
 	cl_assert_equal_s("--bar", argz[2]);
 }
 
+void test_adopt__parse_options_gnustyle(void)
+{
+	int foo = 0;
+	char *bar = NULL, **argz = NULL;
+	char **args;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,   0  },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	/* allocate so that `adopt_parse` can reorder things */
+	cl_assert(args = malloc(sizeof(char *) * 7));
+	args[0] = "BRR";
+	args[1] = "-f";
+	args[2] = "one";
+	args[3] = "two";
+	args[4] = "--bar";
+	args[5] = "three";
+	args[6] = "four";
+
+	cl_must_pass(adopt_parse(&result, specs, args, 7, ADOPT_PARSE_GNU));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(4, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_s("three", bar);
+	cl_assert(argz);
+	cl_assert_equal_s("BRR", argz[0]);
+	cl_assert_equal_s("one", argz[1]);
+	cl_assert_equal_s("two", argz[2]);
+	cl_assert_equal_s("four", argz[3]);
+
+	free(args);
+}
+
+void test_adopt__parse_options_gnustyle_dangling_value(void)
+{
+	int foo = 0;
+	char *bar = NULL, **argz = NULL;
+	char **args;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,   0  },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	/* allocate so that `adopt_parse` can reorder things */
+	cl_assert(args = malloc(sizeof(char *) * 7));
+	args[0] = "BRR";
+	args[1] = "-f";
+	args[2] = "one";
+	args[3] = "two";
+	args[4] = "three";
+	args[5] = "four";
+	args[6] = "--bar";
+
+	cl_must_pass(adopt_parse(&result, specs, args, 7, ADOPT_PARSE_GNU));
+
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, result.status);
+	cl_assert_equal_s("--bar", result.arg);
+
+	free(args);
+}
+
 void test_adopt__value_required(void)
 {
 	int foo = 0;
@@ -876,12 +950,12 @@ void test_adopt__required_choice_specified(void)
 	adopt_spec specs[] = {
 		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f', ADOPT_USAGE_REQUIRED },
 		{ ADOPT_TYPE_VALUE,  "bar",  0,  &bar,  'b', ADOPT_USAGE_CHOICE },
-		{ ADOPT_TYPE_ARG,    "baz",  0,  &baz,  'z', ADOPT_USAGE_REQUIRED },
+		{ ADOPT_TYPE_ARG,    "baz",  0,  &baz,   0,  ADOPT_USAGE_REQUIRED },
 		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0,  0 },
 		{ 0 },
 	};
 
-	char *args[] = { "--bar" };
+	char *args[] = { "--bar", "b" };
 
 	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 

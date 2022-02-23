@@ -85,6 +85,20 @@ typedef enum {
 typedef enum {
 	/** Default parsing behavior. */
 	ADOPT_PARSE_DEFAULT  = 0,
+
+	/**
+	 * Parse with GNU `getopt_long` style behavior, where options can
+	 * be intermixed with arguments at any position (for example,
+	 * "file1 --help file2".)  Like `getopt_long`, this can mutate the
+	 * arguments given.
+	 */
+	ADOPT_PARSE_GNU = (1u << 0),
+
+	/**
+	 * Force GNU `getopt_long` style behavior; the `POSIXLY_CORRECT`
+	 * environment variable is ignored.
+	 */
+	ADOPT_PARSE_FORCE_GNU = (1u << 1),
 } adopt_flag_t;
 
 /** Specification for an available option. */
@@ -208,11 +222,14 @@ typedef struct adopt_parser {
 	const adopt_spec *specs;
 	char **args;
 	size_t args_len;
+	unsigned int flags;
 
+	/* Parser state */
 	size_t idx;
 	size_t arg_idx;
 	size_t in_args;
-	int in_literal : 1,
+	int needs_sort : 1,
+	    in_literal : 1,
 	    in_short : 1;
 } adopt_parser;
 
@@ -228,7 +245,7 @@ typedef struct adopt_parser {
  * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
  * @param args The arguments that will be parsed
  * @param args_len The length of arguments to be parsed
- * @param flags The flags for parsing
+ * @param flags The `adopt_flag_t flags for parsing
  */
 adopt_status_t adopt_parse(
     adopt_opt *opt,
@@ -245,12 +262,14 @@ adopt_status_t adopt_parse(
  * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
  * @param args The arguments that will be parsed
  * @param args_len The length of arguments to be parsed
+ * @param flags The `adopt_flag_t flags for parsing
  */
 void adopt_parser_init(
 	adopt_parser *parser,
 	const adopt_spec specs[],
 	char **args,
-	size_t args_len);
+	size_t args_len,
+	unsigned int flags);
 
 /**
  * Parses the next command-line argument and places the information about

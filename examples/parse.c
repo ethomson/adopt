@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	adopt_opt result;
 	size_t i;
 
-	if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) != 0) {
+	if (adopt_parse(&result, opt_specs, argv + 1, argc - 1, ADOPT_PARSE_DEFAULT) != 0) {
 		adopt_status_fprint(stderr, argv[0], &result);
 		adopt_usage_fprint(stderr, argv[0], opt_specs);
 		return 129;

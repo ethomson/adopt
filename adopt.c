@@ -354,7 +354,8 @@ adopt_status_t adopt_parse(
 	adopt_opt *opt,
 	const adopt_spec specs[],
 	char **args,
-	size_t args_len)
+	size_t args_len,
+	unsigned int flags)
 {
 	adopt_parser parser;
 	const adopt_spec **given_specs;

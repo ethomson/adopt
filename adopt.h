@@ -82,6 +82,11 @@ typedef enum {
 	ADOPT_USAGE_SHOW_LONG = (1u << 5),
 } adopt_usage_t;
 
+typedef enum {
+	/** Default parsing behavior. */
+	ADOPT_PARSE_DEFAULT  = 0,
+} adopt_flag_t;
+
 /** Specification for an available option. */
 typedef struct adopt_spec {
 	/** Type of option expected. */
@@ -223,12 +228,14 @@ typedef struct adopt_parser {
  * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
  * @param args The arguments that will be parsed
  * @param args_len The length of arguments to be parsed
+ * @param flags The flags for parsing
  */
 adopt_status_t adopt_parse(
     adopt_opt *opt,
     const adopt_spec specs[],
     char **args,
-    size_t args_len);
+    size_t args_len,
+    unsigned int flags);
 
 /**
  * Initializes a parser that parses the given arguments according to the

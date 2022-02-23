@@ -28,8 +28,8 @@ Types of options
 * Literal separators are bare double-dashes, `--` as a lone
   word, indicating that further words will be treated as
   arguments (even if they begin with a dash).
-* Arguments are options that are bare words, not prefixed with
-  a single or double dash, for example `filename.txt`.
+* Arguments are bare words, not prefixed with a single or double dash,
+  for example `filename.txt`.
 * Argument lists are the remainder of arguments, not prefixed
   with dashes.  For example, an array: `file1.txt`, `file2.txt`,
   ...
@@ -99,7 +99,7 @@ int main(int argc, const char **argv)
     const char *value;
     const char *file;
     
-    if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) < 0) {
+    if (adopt_parse(&result, opt_specs, argv + 1, argc - 1, ADOPT_PARSE_DEFAULT) < 0) {
             adopt_status_fprint(stderr, &opt);
             adopt_usage_fprint(stderr, argv[0], opt_specs);
             return 129;

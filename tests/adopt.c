@@ -602,7 +602,7 @@ void test_adopt__parse_oneshot(void)
 
 	char *args[] = { "-f", "--bar" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 2));
+	cl_must_pass(adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i('f', foo);
 	cl_assert_equal_i('b', bar);
@@ -625,7 +625,7 @@ void test_adopt__parse_oneshot_unknown_option(void)
 
 	char *args[] = { "-f", "--bar", "--asdf" };
 
-	cl_assert_equal_i(ADOPT_STATUS_UNKNOWN_OPTION, adopt_parse(&result, specs, args, 3));
+	cl_assert_equal_i(ADOPT_STATUS_UNKNOWN_OPTION, adopt_parse(&result, specs, args, 3, ADOPT_PARSE_DEFAULT));
 }
 
 void test_adopt__parse_oneshot_missing_value(void)
@@ -642,7 +642,7 @@ void test_adopt__parse_oneshot_missing_value(void)
 
 	char *args[] = { "-f", "--bar" };
 
-	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, adopt_parse(&result, specs, args, 2));
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 }
 
 void test_adopt__parse_arg(void)
@@ -661,7 +661,7 @@ void test_adopt__parse_arg(void)
 
 	char *args[] = { "-f", "bar", "baz" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 3));
+	cl_must_pass(adopt_parse(&result, specs, args, 3, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i('f', foo);
 	cl_assert_equal_p(NULL, bar);
@@ -689,7 +689,7 @@ void test_adopt__parse_arg_mixed_with_switches(void)
 
 	char *args[] = { "-f", "bar", "baz", "--bar" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 4));
+	cl_must_pass(adopt_parse(&result, specs, args, 4, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i('f', foo);
 	cl_assert_equal_p('b', bar);
@@ -718,7 +718,7 @@ void test_adopt__parse_arg_with_literal(void)
 
 	char *args[] = { "-f", "--", "--bar" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 3));
+	cl_must_pass(adopt_parse(&result, specs, args, 3, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i('f', foo);
 	cl_assert_equal_p(NULL, bar);
@@ -745,7 +745,7 @@ void test_adopt__parse_args(void)
 
 	char *args[] = { "-f", "--bar", "BRR", "one", "two", "three", "four" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 7));
+	cl_must_pass(adopt_parse(&result, specs, args, 7, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
 	cl_assert_equal_p(NULL, result.arg);
@@ -777,7 +777,7 @@ void test_adopt__parse_args_with_literal(void)
 
 	char *args[] = { "-f", "--", "--bar", "asdf", "--baz" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 5));
+	cl_must_pass(adopt_parse(&result, specs, args, 5, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
 	cl_assert_equal_p(NULL, result.arg);
@@ -807,7 +807,7 @@ void test_adopt__parse_args_implies_literal(void)
 
 	char *args[] = { "-f", "foo", "bar", "--bar" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 4));
+	cl_must_pass(adopt_parse(&result, specs, args, 4, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
 	cl_assert_equal_p(NULL, result.arg);
@@ -837,7 +837,7 @@ void test_adopt__value_required(void)
 
 	char *args[] = { "-f", "--bar" };
 
-	cl_must_pass(adopt_parse(&result, specs, args, 2));
+	cl_must_pass(adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_MISSING_VALUE, result.status);
 }
@@ -857,7 +857,7 @@ void test_adopt__required_choice_missing(void)
 
 	char *args[] = { "foo", "bar" };
 
-	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, adopt_parse(&result, specs, args, 2));
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, result.status);
 	cl_assert_equal_s("foo", result.spec->name);
@@ -883,7 +883,7 @@ void test_adopt__required_choice_specified(void)
 
 	char *args[] = { "--bar" };
 
-	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, adopt_parse(&result, specs, args, 2));
+	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_MISSING_ARGUMENT, result.status);
 	cl_assert_equal_s("baz", result.spec->name);
@@ -910,7 +910,7 @@ void test_adopt__choice_switch_or_arg_advances_arg(void)
 
 	char *args[] = { "-z", "actually_final" };
 
-	cl_assert_equal_i(ADOPT_STATUS_DONE, adopt_parse(&result, specs, args, 2));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
 	cl_assert_equal_p(NULL, result.arg);
@@ -938,7 +938,7 @@ void test_adopt__stop(void)
 
 	char *args[] = { "-f", "--help", "-z" };
 
-	cl_assert_equal_i(ADOPT_STATUS_DONE, adopt_parse(&result, specs, args, 2));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
 	cl_assert_equal_s("--help", result.arg);

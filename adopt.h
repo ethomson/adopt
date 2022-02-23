@@ -212,6 +212,25 @@ typedef struct adopt_parser {
 } adopt_parser;
 
 /**
+ * Parses all the command-line arguments and updates all the options using
+ * the pointers provided.  Parsing stops on any invalid argument and
+ * information about the failure will be provided in the opt argument.
+ *
+ * This is the simplest way to parse options; it handles the initialization
+ * (`parser_init`) and looping (`parser_next`).
+ *
+ * @param opt The The `adopt_opt` information that failed parsing
+ * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
+ * @param args The arguments that will be parsed
+ * @param args_len The length of arguments to be parsed
+ */
+adopt_status_t adopt_parse(
+    adopt_opt *opt,
+    const adopt_spec specs[],
+    char **args,
+    size_t args_len);
+
+/**
  * Initializes a parser that parses the given arguments according to the
  * given specifications.
  *
@@ -239,22 +258,6 @@ void adopt_parser_init(
 adopt_status_t adopt_parser_next(
 	adopt_opt *opt,
 	adopt_parser *parser);
-
-/**
- * Parses all the command-line arguments and updates all the options using
- * the pointers provided.  Parsing stops on any invalid argument and
- * information about the failure will be provided in the opt argument.
- *
- * @param opt The The `adopt_opt` information that failed parsing
- * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
- * @param args The arguments that will be parsed
- * @param args_len The length of arguments to be parsed
- */
-adopt_status_t adopt_parse(
-    adopt_opt *opt,
-    const adopt_spec specs[],
-    char **args,
-    size_t args_len);
 
 /**
  * Prints the status after parsing the most recent argument.  This is

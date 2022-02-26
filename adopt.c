@@ -43,9 +43,8 @@ INLINE(const adopt_spec *) spec_for_long(
 	char *eql;
 	size_t eql_pos;
 
-	arg += 2;
-	eql = strrchr(arg, '=');
-	eql_pos = (eql = strrchr(arg, '=')) ? (size_t)(eql - arg) : strlen(arg);
+	eql = strchr(arg, '=');
+	eql_pos = (eql = strchr(arg, '=')) ? (size_t)(eql - arg) : strlen(arg);
 
 	for (spec = parser->specs; spec->type; ++spec) {
 		/* Handle -- (everything after this is literal) */
@@ -90,15 +89,14 @@ INLINE(const adopt_spec *) spec_for_short(
 	for (spec = parser->specs; spec->type; ++spec) {
 		/* Handle -svalue short options with a value */
 		if (spec->type == ADOPT_TYPE_VALUE &&
-		    arg[1] == spec->alias &&
-		    arg[2] != '\0') {
-			*value = &arg[2];
+		    arg[0] == spec->alias &&
+		    arg[1] != '\0') {
+			*value = &arg[1];
 			return spec;
 		}
 
 		/* Handle typical -s short options */
-		if (arg[1] == spec->alias &&
-		    arg[2] == '\0') {
+		if (arg[0] == spec->alias) {
 			*value = NULL;
 			return spec;
 		}
@@ -164,7 +162,7 @@ static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 
 	opt->arg = arg;
 
-	if ((spec = spec_for_long(&is_negated, &has_value, &value, parser, arg)) == NULL) {
+	if ((spec = spec_for_long(&is_negated, &has_value, &value, parser, &arg[2])) == NULL) {
 		opt->spec = NULL;
 		opt->status = ADOPT_STATUS_UNKNOWN_OPTION;
 		goto done;
@@ -221,7 +219,7 @@ static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 
 	opt->arg = arg;
 
-	if ((spec = spec_for_short(&value, parser, arg)) == NULL) {
+	if ((spec = spec_for_short(&value, parser, &arg[1 + parser->in_short])) == NULL) {
 		opt->spec = NULL;
 		opt->status = ADOPT_STATUS_UNKNOWN_OPTION;
 		goto done;
@@ -235,11 +233,11 @@ static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 	else if (spec->type == ADOPT_TYPE_ACCUMULATOR && spec->value)
 		*((int *)spec->value) += spec->switch_value ? spec->switch_value : 1;
 
-	if (spec->type == ADOPT_TYPE_SWITCH && spec->value)
+	else if (spec->type == ADOPT_TYPE_SWITCH && spec->value)
 		*((int *)spec->value) = spec->switch_value;
 
 	/* Parse values as "-ifoo" or "-i foo" */
-	if (spec->type == ADOPT_TYPE_VALUE) {
+	else if (spec->type == ADOPT_TYPE_VALUE) {
 		if (value)
 			opt->value = (char *)value;
 		else if ((parser->idx + 1) <= parser->args_len)
@@ -247,6 +245,18 @@ static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 
 		if (spec->value)
 			*((char **)spec->value) = opt->value;
+	}
+
+	/*
+	 * Handle compressed short arguments, like "-fbcd"; see if there's
+	 * another character after the one we processed.  If not, advance
+	 * the parser index.
+	 */
+	if (spec->type != ADOPT_TYPE_VALUE && arg[2 + parser->in_short] != '\0') {
+		parser->in_short++;
+		parser->idx--;
+	} else {
+		parser->in_short = 0;
 	}
 
 	/* Required argument was not provided */
@@ -341,16 +351,25 @@ INLINE(const adopt_spec *) spec_for_sort(
 	int is_negated, has_value = 0;
 	const char *value;
 	const adopt_spec *spec = NULL;
+	size_t idx = 0;
 
 	*needs_value = 0;
 
 	if (strncmp(arg, "--", 2) == 0) {
-		spec = spec_for_long(&is_negated, &has_value, &value, parser, arg);
+		spec = spec_for_long(&is_negated, &has_value, &value, parser, &arg[2]);
 		*needs_value = !has_value;
 	}
 
 	else if (strncmp(arg, "-", 1) == 0) {
-		spec = spec_for_short(&value, parser, arg);
+		spec = spec_for_short(&value, parser, &arg[1]);
+
+		/*
+		 * Advance through compressed short arguments to see if
+		 * the last one has a value, eg "-xvffilename".
+		 */
+		while (spec && !value && arg[1 + ++idx] != '\0')
+			spec = spec_for_short(&value, parser, &arg[1 + idx]);
+
 		*needs_value = (value == NULL);
 	}
 
@@ -440,12 +459,14 @@ adopt_status_t adopt_parser_next(adopt_opt *opt, adopt_parser *parser)
 
 	/* Handle options in long form, those beginning with "--" */
 	if (strncmp(parser->args[parser->idx], "--", 2) == 0 &&
-		!parser->in_literal)
+	    !parser->in_short &&
+	    !parser->in_literal)
 		return parse_long(opt, parser);
 
 	/* Handle options in short form, those beginning with "-" */
-	else if (strncmp(parser->args[parser->idx], "-", 1) == 0 &&
-		!parser->in_literal)
+	else if (parser->in_short ||
+	         (strncmp(parser->args[parser->idx], "-", 1) == 0 &&
+		  !parser->in_literal))
 		return parse_short(opt, parser);
 
 	/*

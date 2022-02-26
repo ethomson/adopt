@@ -972,6 +972,140 @@ void test_adopt__parse_options_gnustyle_dangling_value(void)
 	free(args);
 }
 
+void test_adopt__parse_options_gnustyle_with_compressed_shorts(void)
+{
+	int foo = 0, baz = 0;
+	char *bar = NULL, **argz = NULL;
+	char **args;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_BOOL,   "baz", 'z', &baz,   0  },
+		{ ADOPT_TYPE_VALUE,  "bar", 'b', &bar,  'b' },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	/* allocate so that `adopt_parse` can reorder things */
+	cl_assert(args = malloc(sizeof(char *) * 7));
+	args[0] = "BRR";
+	args[1] = "-fzb";
+	args[2] = "bar";
+	args[3] = "one";
+	args[4] = "two";
+	args[5] = "three";
+	args[6] = "four";
+
+	cl_must_pass(adopt_parse(&result, specs, args, 7, ADOPT_PARSE_GNU));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(5, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_s("bar", bar);
+	cl_assert(argz);
+	cl_assert_equal_s("BRR", argz[0]);
+	cl_assert_equal_s("one", argz[1]);
+	cl_assert_equal_s("two", argz[2]);
+	cl_assert_equal_s("three", argz[3]);
+	cl_assert_equal_s("four", argz[4]);
+
+	free(args);
+}
+
+void test_adopt__compressed_shorts1(void)
+{
+	int foo = 0, baz = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_BOOL,   "baz", 'z', &baz,   0  },
+		{ ADOPT_TYPE_VALUE,  "bar", 'b', &bar,  'b' },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-fzb", "asdf", "foobar" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 3, ADOPT_PARSE_DEFAULT));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(1, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_i(1, baz);
+	cl_assert_equal_s("asdf", bar);
+	cl_assert(argz);
+	cl_assert_equal_s("foobar", argz[0]);
+}
+
+void test_adopt__compressed_shorts2(void)
+{
+	int foo = 0, baz = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_BOOL,   "baz", 'z', &baz,   0  },
+		{ ADOPT_TYPE_VALUE,  "bar", 'b', &bar,  'b' },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-fzbasdf", "foobar" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(1, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_i(1, baz);
+	cl_assert_equal_s("asdf", bar);
+	cl_assert(argz);
+	cl_assert_equal_s("foobar", argz[0]);
+}
+
+void test_adopt__compressed_shorts3(void)
+{
+	int foo = 0, baz = 0;
+	char *bar = NULL, **argz = NULL;
+	adopt_opt result;
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_SWITCH, "foo", 'f', &foo,  'f' },
+		{ ADOPT_TYPE_BOOL,   "baz", 'z', &baz,   0  },
+		{ ADOPT_TYPE_VALUE,  "bar", 'b', &bar,  'b' },
+		{ ADOPT_TYPE_ARGS,   "argz", 0,  &argz,  0  },
+		{ 0 },
+	};
+
+	char *args[] = { "-fbzasdf", "foobar" };
+
+	cl_must_pass(adopt_parse(&result, specs, args, 2, ADOPT_PARSE_DEFAULT));
+
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_p(NULL, result.arg);
+	cl_assert_equal_p(NULL, result.value);
+	cl_assert_equal_i(1, result.args_len);
+
+	cl_assert_equal_i('f', foo);
+	cl_assert_equal_i(0, baz);
+	cl_assert_equal_s("zasdf", bar);
+	cl_assert(argz);
+	cl_assert_equal_s("foobar", argz[0]);
+}
+
 void test_adopt__value_required(void)
 {
 	int foo = 0;

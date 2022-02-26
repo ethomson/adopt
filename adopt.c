@@ -27,6 +27,10 @@
 # define INLINE(type) static inline type
 #endif
 
+#ifdef _MSC_VER
+# define alloca _alloca
+#endif
+
 #define spec_is_option_type(x) \
 	((x)->type == ADOPT_TYPE_BOOL || \
 	 (x)->type == ADOPT_TYPE_SWITCH || \

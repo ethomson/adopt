@@ -29,12 +29,27 @@ typedef enum {
 	ADOPT_TYPE_BOOL,
 
 	/**
-	 * An option that, when specified, sets the given `value_ptr`
-	 * to the given `value`.
+	 * An option that, when specified, sets the given `value` pointer
+	 * to the specified `switch_value`.  This is useful for booleans
+	 * where you do not want the implicit negation that comes with an
+	 * `ADOPT_TYPE_BOOL`, or for switches that multiplex a value, like
+	 * setting a mode.  For example, `--read` may set the `value` to
+	 * `MODE_READ` and `--write` may set the `value` to `MODE_WRITE`.
 	 */
 	ADOPT_TYPE_SWITCH,
 
-	/** An option that has a value ("-nvalue" or "--name value") */
+	/**
+	 * An option that, when specified, increments the given
+	 * `value` by the given `switch_value`.  This can be specified
+	 * multiple times to continue to increment the `value`.
+	 * (For example, "-vvv" to set verbosity to 3.)
+	 */
+	ADOPT_TYPE_ACCUMULATOR,
+
+	/**
+	 * An option that takes a value, for example `-n value`,
+	 * `-nvalue`, `--name value` or `--name=value`.
+	 */
 	ADOPT_TYPE_VALUE,
 
 	/**
@@ -46,10 +61,21 @@ typedef enum {
 	 */
 	ADOPT_TYPE_LITERAL,
 
-	/** A single bare argument ("path") */
+	/**
+	 * A single argument, not an option.  When options are exhausted,
+	 * arguments will be matches in the order that they're specified
+	 * in the spec list.  For example, if two `ADOPT_TYPE_ARGS` are
+	 * specified, `input_file` and `output_file`, then the first bare
+	 * argument on the command line will be `input_file` and the
+	 * second will be `output_file`.
+	 */
 	ADOPT_TYPE_ARG,
 
-	/** Unmatched arguments, a collection of bare arguments ("paths...") */
+	/**
+	 * A collection of arguments.  This is useful when you want to take
+	 * a list of arguments, for example, multiple paths.  When specified,
+	 * the value will be set to the first argument in the list.
+	 */
 	ADOPT_TYPE_ARGS,
 } adopt_type_t;
 
@@ -123,8 +149,13 @@ typedef struct adopt_spec {
 	 * to an `int` that will be set to `1` if the option is specified.
 	 *
 	 * If this spec is of type `ADOPT_TYPE_SWITCH`, this is a pointer
-	 * to an `int` that will be set to the opt's `value` (below) when
-	 * this option is specified.
+	 * to an `int` that will be set to the opt's `switch_value` (below)
+	 * when this option is specified.
+	 *
+	 * If this spec is of type `ADOPT_TYPE_ACCUMULATOR`, this is a
+	 * pointer to an `int` that will be incremented by the opt's
+	 * `switch_value` (below).  If no `switch_value` is provided then
+	 * the value will be incremented by 1.
 	 *
 	 * If this spec is of type `ADOPT_TYPE_VALUE`,
 	 * `ADOPT_TYPE_VALUE_OPTIONAL`, or `ADOPT_TYPE_ARG`, this is
@@ -139,8 +170,10 @@ typedef struct adopt_spec {
 
 	/**
 	 * If this spec is of type `ADOPT_TYPE_SWITCH`, this is the value
-	 * to set in the option's `value_ptr` pointer when it is specified.
-	 * This is ignored for other opt types.
+	 * to set in the option's `value` pointer when it is specified.  If
+	 * this spec is of type `ADOPT_TYPE_ACCUMULATOR`, this is the value
+	 * to increment in the option's `value` pointer when it is
+	 * specified.  This is ignored for other opt types.
 	 */
 	int switch_value;
 

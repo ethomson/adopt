@@ -180,6 +180,10 @@ static adopt_status_t parse_long(adopt_opt *opt, adopt_parser *parser)
 	else if (spec->type == ADOPT_TYPE_BOOL && spec->value)
 		*((int *)spec->value) = !is_negated;
 
+	/* --accumulate */
+	else if (spec->type == ADOPT_TYPE_ACCUMULATOR && spec->value)
+		*((int *)spec->value) += spec->switch_value ? spec->switch_value : 1;
+
 	/* --switch */
 	else if (spec->type == ADOPT_TYPE_SWITCH && spec->value)
 		*((int *)spec->value) = spec->switch_value;
@@ -227,6 +231,9 @@ static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 
 	if (spec->type == ADOPT_TYPE_BOOL && spec->value)
 		*((int *)spec->value) = 1;
+
+	else if (spec->type == ADOPT_TYPE_ACCUMULATOR && spec->value)
+		*((int *)spec->value) += spec->switch_value ? spec->switch_value : 1;
 
 	if (spec->type == ADOPT_TYPE_SWITCH && spec->value)
 		*((int *)spec->value) = spec->switch_value;

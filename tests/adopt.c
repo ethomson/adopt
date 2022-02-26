@@ -701,6 +701,82 @@ void test_adopt__parse_arg_mixed_with_switches(void)
 	cl_assert_equal_p(NULL, result.value);
 }
 
+void test_adopt__accumulator(void)
+{
+	int foo = 0;
+	adopt_opt result;
+	char *argz;
+
+	char *args_zero[] = { "foo", "bar", "baz" };
+	char *args_one[] =  { "-f", "foo", "bar", "baz" };
+	char *args_two[] =  { "-f", "-f", "foo", "bar", "baz" };
+	char *args_four[] = { "-f", "-f", "-f", "-f", "foo", "bar", "baz" };
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_ACCUMULATOR, "foo", 'f', &foo,  0 },
+		{ ADOPT_TYPE_ARGS,        "argz", 0,  &argz, 0 },
+		{ 0 },
+	};
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_zero, 3, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(0, foo);
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_one, 4, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(1, foo);
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_two, 5, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(2, foo);
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_four, 7, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(4, foo);
+}
+
+void test_adopt__accumulator_with_custom_incrementor(void)
+{
+	int foo = 0;
+	adopt_opt result;
+	char *argz;
+
+	char *args_zero[] = { "foo", "bar", "baz" };
+	char *args_one[] =  { "-f", "foo", "bar", "baz" };
+	char *args_two[] =  { "-f", "-f", "foo", "bar", "baz" };
+	char *args_four[] = { "-f", "-f", "-f", "-f", "foo", "bar", "baz" };
+
+	adopt_spec specs[] = {
+		{ ADOPT_TYPE_ACCUMULATOR, "foo", 'f', &foo,  42 },
+		{ ADOPT_TYPE_ARGS,        "argz", 0,  &argz, 0  },
+		{ 0 },
+	};
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_zero, 3, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(0, foo);
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_one, 4, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(42, foo);
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_two, 5, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(84, foo);
+
+	foo = 0;
+	cl_must_pass(adopt_parse(&result, specs, args_four, 7, ADOPT_PARSE_DEFAULT));
+	cl_assert_equal_i(ADOPT_STATUS_DONE, result.status);
+	cl_assert_equal_i(168, foo);
+}
+
 void test_adopt__parse_arg_with_literal(void)
 {
 	int foo = 0;

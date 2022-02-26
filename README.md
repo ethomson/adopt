@@ -15,9 +15,14 @@ Types of options
 ----------------
 
 * Boolean values are options that do not take a value, and are
-  either set or unset, for example `-v` or `--verbose`.  Booleans
-  are shorthand for switches that are assigned a value of `1` when
-  present.
+  either set or unset, for example `-v` or `--verbose`.  If a
+  boolean has a long name (eg `--verbose`) then it implicitly has
+  a negation prefixed by `no-` (in this case, `--no-verbose`).
+  The given value will be set to `1` when the boolean is given on
+  the command line and `0` when its negation is given.
+* Accumulators are options that can be provided multiple times to
+  increase its value.  For example, `-v` will set verbosity to `1`,
+  but `-vvv` will set verbosity to `3`.
 * Switches are options that do not take a value on the command
   line, for example `--long` or `--short`.  When a switch is present
   on the command line, a variable will be set to a predetermined value.
@@ -28,8 +33,8 @@ Types of options
 * Literal separators are bare double-dashes, `--` as a lone
   word, indicating that further words will be treated as
   arguments (even if they begin with a dash).
-* Arguments are options that are bare words, not prefixed with
-  a single or double dash, for example `filename.txt`.
+* Arguments are bare words, not prefixed with a single or double dash,
+  for example `filename.txt`.
 * Argument lists are the remainder of arguments, not prefixed
   with dashes.  For example, an array: `file1.txt`, `file2.txt`,
   ...
@@ -41,6 +46,7 @@ Options should be specified as an array of `adopt_spec` elements,
 elements, terminated with an `adopt_spec` initialized to zeroes.
 
 ```c
+int debug = 0;
 int verbose = 0;
 int volume = 1;
 char *channel = "default";
@@ -48,8 +54,13 @@ char *filename1 = NULL;
 char *filename2 = NULL;
 
 adopt_spec opt_specs[] = {
-    /* `verbose`, above, will be set to `1` when specified. */
-    { ADOPT_BOOL, "verbose", 'v', &verbose },
+    /* `verbose`, above, will increment each time `-v` is specified. */
+    { ADOPT_ACCUMULATOR, "verbose", 'v', &verbose },
+
+    /* `debug`, above, will be set to `1` when `--debug` is specified,
+     * or to `0` if `--no-debug` is specified.
+     */
+    { ADOPT_BOOL, "debug", 'd', &debug },
 
     /* `volume` will be set to `0` when `--quiet` is specified, and
      * set to `2` when `--loud` is specified.  if neither is specified,
@@ -99,7 +110,7 @@ int main(int argc, const char **argv)
     const char *value;
     const char *file;
     
-    if (adopt_parse(&result, opt_specs, argv + 1, argc - 1) < 0) {
+    if (adopt_parse(&result, opt_specs, argv + 1, argc - 1, ADOPT_PARSE_DEFAULT) < 0) {
             adopt_status_fprint(stderr, &opt);
             adopt_usage_fprint(stderr, argv[0], opt_specs);
             return 129;

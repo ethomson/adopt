@@ -8,7 +8,7 @@
 
 from __future__ import with_statement
 from string import Template
-import re, fnmatch, os, codecs, pickle
+import re, fnmatch, os, sys, codecs, pickle
 
 class Module(object):
     class Template(object):
@@ -24,8 +24,8 @@ class Module(object):
         def render(self):
             out = "\n".join("extern %s;" % cb['declaration'] for cb in self.module.callbacks) + "\n"
 
-            if self.module.initialize:
-                out += "extern %s;\n" % self.module.initialize['declaration']
+            for initializer in self.module.initializers:
+                out += "extern %s;\n" % initializer['declaration']
 
             if self.module.cleanup:
                 out += "extern %s;\n" % self.module.cleanup['declaration']
@@ -41,7 +41,19 @@ class Module(object):
 
     class InfoTemplate(Template):
         def render(self):
-            return Template(
+            templates = []
+
+            initializers = self.module.initializers
+            if len(initializers) == 0:
+                initializers = [ None ]
+
+            for initializer in initializers:
+                name = self.module.clean_name()
+                if initializer and initializer['short_name'].startswith('initialize_'):
+                    variant = initializer['short_name'][len('initialize_'):]
+                    name += " (%s)" % variant.replace('_', ' ')
+
+                template = Template(
             r"""
     {
         "${clean_name}",
@@ -49,19 +61,22 @@ class Module(object):
     ${cleanup},
         ${cb_ptr}, ${cb_count}, ${enabled}
     }"""
-            ).substitute(
-                clean_name = self.module.clean_name(),
-                initialize = self._render_callback(self.module.initialize),
-                cleanup = self._render_callback(self.module.cleanup),
-                cb_ptr = "_clar_cb_%s" % self.module.name,
-                cb_count = len(self.module.callbacks),
-                enabled = int(self.module.enabled)
-            )
+                ).substitute(
+                    clean_name = name,
+                    initialize = self._render_callback(initializer),
+                    cleanup = self._render_callback(self.module.cleanup),
+                    cb_ptr = "_clar_cb_%s" % self.module.name,
+                    cb_count = len(self.module.callbacks),
+                    enabled = int(self.module.enabled)
+                )
+                templates.append(template)
+
+            return ','.join(templates)
 
     def __init__(self, name):
         self.name = name
 
-        self.mtime = 0
+        self.mtime = None
         self.enabled = True
         self.modified = False
 
@@ -80,13 +95,13 @@ class Module(object):
         return re.sub(SKIP_COMMENTS_REGEX, _replacer, text)
 
     def parse(self, contents):
-        TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\(\s*void\s*\))\s*\{"
+        TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\s*\(\s*void\s*\))\s*\{"
 
         contents = self._skip_comments(contents)
         regex = re.compile(TEST_FUNC_REGEX % self.name, re.MULTILINE)
 
         self.callbacks = []
-        self.initialize = None
+        self.initializers = []
         self.cleanup = None
 
         for (declaration, symbol, short_name) in regex.findall(contents):
@@ -96,8 +111,8 @@ class Module(object):
                 "symbol" : symbol
             }
 
-            if short_name == 'initialize':
-                self.initialize = data
+            if short_name.startswith('initialize'):
+                self.initializers.append(data)
             elif short_name == 'cleanup':
                 self.cleanup = data
             else:
@@ -118,7 +133,7 @@ class Module(object):
             self.modified = True
             self.mtime = st.st_mtime
 
-            with open(path) as fp:
+            with codecs.open(path, encoding='utf-8') as fp:
                 raw_content = fp.read()
 
         except IOError:
@@ -128,8 +143,9 @@ class Module(object):
 
 class TestSuite(object):
 
-    def __init__(self, path):
+    def __init__(self, path, output):
         self.path = path
+        self.output = output
 
     def should_generate(self, path):
         if not os.path.isfile(path):
@@ -150,14 +166,14 @@ class TestSuite(object):
 
             for test_file in tests_in_module:
                 full_path = os.path.join(root, test_file)
-                module_name = "_".join(module_root + [test_file[:-2]])
+                module_name = "_".join(module_root + [test_file[:-2]]).replace("-", "_")
 
                 modules.append((full_path, module_name))
 
         return modules
 
     def load_cache(self):
-        path = os.path.join(self.path, '.clarcache')
+        path = os.path.join(self.output, '.clarcache')
         cache = {}
 
         try:
@@ -170,7 +186,7 @@ class TestSuite(object):
         return cache
 
     def save_cache(self):
-        path = os.path.join(self.path, '.clarcache')
+        path = os.path.join(self.output, '.clarcache')
         with open(path, 'wb') as cache:
             pickle.dump(self.modules, cache)
 
@@ -194,28 +210,30 @@ class TestSuite(object):
                     module.modified = True
 
     def suite_count(self):
-        return len(self.modules)
+        return sum(max(1, len(m.initializers)) for m in self.modules.values())
 
     def callback_count(self):
         return sum(len(module.callbacks) for module in self.modules.values())
 
     def write(self):
-        output = os.path.join(self.path, 'clar.suite')
+        output = os.path.join(self.output, 'clar.suite')
 
         if not self.should_generate(output):
             return False
 
         with open(output, 'w') as data:
-            for module in self.modules.values():
+            modules = sorted(self.modules.values(), key=lambda module: module.name)
+
+            for module in modules:
                 t = Module.DeclarationTemplate(module)
                 data.write(t.render())
 
-            for module in self.modules.values():
+            for module in modules:
                 t = Module.CallbacksTemplate(module)
                 data.write(t.render())
 
             suites = "static struct clar_suite _clar_suites[] = {" + ','.join(
-                Module.InfoTemplate(module).render() for module in sorted(self.modules.values(), key=lambda module: module.name)
+                Module.InfoTemplate(module).render() for module in modules
             ) + "\n};\n"
 
             data.write(suites)
@@ -223,22 +241,27 @@ class TestSuite(object):
             data.write("static const size_t _clar_suite_count = %d;\n" % self.suite_count())
             data.write("static const size_t _clar_callback_count = %d;\n" % self.callback_count())
 
-        suite.save_cache()
+        self.save_cache()
         return True
 
 if __name__ == '__main__':
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option('-f', '--force', dest='force', default=False)
+    parser.add_option('-f', '--force', action="store_true", dest='force', default=False)
     parser.add_option('-x', '--exclude', dest='excluded', action='append', default=[])
+    parser.add_option('-o', '--output', dest='output')
 
     options, args = parser.parse_args()
+    if len(args) > 1:
+        print("More than one path given")
+        sys.exit(1)
 
-    for path in args or ['.']:
-        suite = TestSuite(path)
-        suite.load(options.force)
-        suite.disable(options.excluded)
-        if suite.write():
-            print("Written `clar.suite` (%d tests in %d suites)" % (suite.callback_count(), suite.suite_count()))
+    path = args.pop() if args else '.'
+    output = options.output or path
+    suite = TestSuite(path, output)
+    suite.load(options.force)
+    suite.disable(options.excluded)
+    if suite.write():
+        print("Written `clar.suite` (%d tests in %d suites)" % (suite.callback_count(), suite.suite_count()))
 

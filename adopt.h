@@ -19,31 +19,63 @@ typedef enum {
 	ADOPT_TYPE_NONE = 0,
 
 	/**
-	 * An argument that, when specified, sets a given value to true.
-	 * This is useful for arguments like "--debug".  A converse
-	 * argument (beginning with "no-") is implicitly specified; for
+	 * An option that, when specified, sets a given value to true.
+	 * This is useful for options like "--debug".  A negation
+	 * option (beginning with "no-") is implicitly specified; for
 	 * example "--no-debug".  The `value` pointer in the returned
 	 * option will be set to `1` when this is specified, and set to
-	 * `0` when the converse "no-" argument is specified.
+	 * `0` when the negation "no-" option is specified.
 	 */
 	ADOPT_TYPE_BOOL,
 
 	/**
-	 * An argument that, when specified, sets the given `value_ptr`
-	 * to the given `value`.
+	 * An option that, when specified, sets the given `value` pointer
+	 * to the specified `switch_value`.  This is useful for booleans
+	 * where you do not want the implicit negation that comes with an
+	 * `ADOPT_TYPE_BOOL`, or for switches that multiplex a value, like
+	 * setting a mode.  For example, `--read` may set the `value` to
+	 * `MODE_READ` and `--write` may set the `value` to `MODE_WRITE`.
 	 */
 	ADOPT_TYPE_SWITCH,
 
-	/** An argument that has a value ("-nvalue" or "--name value") */
+	/**
+	 * An option that, when specified, increments the given
+	 * `value` by the given `switch_value`.  This can be specified
+	 * multiple times to continue to increment the `value`.
+	 * (For example, "-vvv" to set verbosity to 3.)
+	 */
+	ADOPT_TYPE_ACCUMULATOR,
+
+	/**
+	 * An option that takes a value, for example `-n value`,
+	 * `-nvalue`, `--name value` or `--name=value`.
+	 */
 	ADOPT_TYPE_VALUE,
 
-	/** The literal arguments follow specifier, bare "--" */
+	/**
+	 * A bare "--" that indicates that arguments following this are
+	 * literal.  This allows callers to specify things that might
+	 * otherwise look like options, for example to operate on a file
+	 * named "-rf" then you can invoke "program -- -rf" to treat
+	 * "-rf" as an argument not an option.
+	 */
 	ADOPT_TYPE_LITERAL,
 
-	/** A single "free" argument ("path") */
+	/**
+	 * A single argument, not an option.  When options are exhausted,
+	 * arguments will be matches in the order that they're specified
+	 * in the spec list.  For example, if two `ADOPT_TYPE_ARGS` are
+	 * specified, `input_file` and `output_file`, then the first bare
+	 * argument on the command line will be `input_file` and the
+	 * second will be `output_file`.
+	 */
 	ADOPT_TYPE_ARG,
 
-	/** Unmatched arguments, a collection of "free" arguments ("paths...") */
+	/**
+	 * A collection of arguments.  This is useful when you want to take
+	 * a list of arguments, for example, multiple paths.  When specified,
+	 * the value will be set to the first argument in the list.
+	 */
 	ADOPT_TYPE_ARGS,
 } adopt_type_t;
 
@@ -82,6 +114,25 @@ typedef enum {
 	ADOPT_USAGE_SHOW_LONG = (1u << 5),
 } adopt_usage_t;
 
+typedef enum {
+	/** Default parsing behavior. */
+	ADOPT_PARSE_DEFAULT  = 0,
+
+	/**
+	 * Parse with GNU `getopt_long` style behavior, where options can
+	 * be intermixed with arguments at any position (for example,
+	 * "file1 --help file2".)  Like `getopt_long`, this can mutate the
+	 * arguments given.
+	 */
+	ADOPT_PARSE_GNU = (1u << 0),
+
+	/**
+	 * Force GNU `getopt_long` style behavior; the `POSIXLY_CORRECT`
+	 * environment variable is ignored.
+	 */
+	ADOPT_PARSE_FORCE_GNU = (1u << 1),
+} adopt_flag_t;
+
 /** Specification for an available option. */
 typedef struct adopt_spec {
 	/** Type of option expected. */
@@ -98,8 +149,13 @@ typedef struct adopt_spec {
 	 * to an `int` that will be set to `1` if the option is specified.
 	 *
 	 * If this spec is of type `ADOPT_TYPE_SWITCH`, this is a pointer
-	 * to an `int` that will be set to the opt's `value` (below) when
-	 * this option is specified.
+	 * to an `int` that will be set to the opt's `switch_value` (below)
+	 * when this option is specified.
+	 *
+	 * If this spec is of type `ADOPT_TYPE_ACCUMULATOR`, this is a
+	 * pointer to an `int` that will be incremented by the opt's
+	 * `switch_value` (below).  If no `switch_value` is provided then
+	 * the value will be incremented by 1.
 	 *
 	 * If this spec is of type `ADOPT_TYPE_VALUE`,
 	 * `ADOPT_TYPE_VALUE_OPTIONAL`, or `ADOPT_TYPE_ARG`, this is
@@ -114,8 +170,10 @@ typedef struct adopt_spec {
 
 	/**
 	 * If this spec is of type `ADOPT_TYPE_SWITCH`, this is the value
-	 * to set in the option's `value_ptr` pointer when it is specified.
-	 * This is ignored for other opt types.
+	 * to set in the option's `value` pointer when it is specified.  If
+	 * this spec is of type `ADOPT_TYPE_ACCUMULATOR`, this is the value
+	 * to increment in the option's `value` pointer when it is
+	 * specified.  This is ignored for other opt types.
 	 */
 	int switch_value;
 
@@ -203,13 +261,37 @@ typedef struct adopt_parser {
 	const adopt_spec *specs;
 	char **args;
 	size_t args_len;
+	unsigned int flags;
 
+	/* Parser state */
 	size_t idx;
 	size_t arg_idx;
 	size_t in_args;
-	int in_literal : 1,
-	    in_short : 1;
+	size_t in_short;
+	int needs_sort : 1,
+	    in_literal : 1;
 } adopt_parser;
+
+/**
+ * Parses all the command-line arguments and updates all the options using
+ * the pointers provided.  Parsing stops on any invalid argument and
+ * information about the failure will be provided in the opt argument.
+ *
+ * This is the simplest way to parse options; it handles the initialization
+ * (`parser_init`) and looping (`parser_next`).
+ *
+ * @param opt The The `adopt_opt` information that failed parsing
+ * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
+ * @param args The arguments that will be parsed
+ * @param args_len The length of arguments to be parsed
+ * @param flags The `adopt_flag_t flags for parsing
+ */
+adopt_status_t adopt_parse(
+    adopt_opt *opt,
+    const adopt_spec specs[],
+    char **args,
+    size_t args_len,
+    unsigned int flags);
 
 /**
  * Initializes a parser that parses the given arguments according to the
@@ -219,12 +301,14 @@ typedef struct adopt_parser {
  * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
  * @param args The arguments that will be parsed
  * @param args_len The length of arguments to be parsed
+ * @param flags The `adopt_flag_t flags for parsing
  */
 void adopt_parser_init(
 	adopt_parser *parser,
 	const adopt_spec specs[],
 	char **args,
-	size_t args_len);
+	size_t args_len,
+	unsigned int flags);
 
 /**
  * Parses the next command-line argument and places the information about
@@ -239,22 +323,6 @@ void adopt_parser_init(
 adopt_status_t adopt_parser_next(
 	adopt_opt *opt,
 	adopt_parser *parser);
-
-/**
- * Parses all the command-line arguments and updates all the options using
- * the pointers provided.  Parsing stops on any invalid argument and
- * information about the failure will be provided in the opt argument.
- *
- * @param opt The The `adopt_opt` information that failed parsing
- * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
- * @param args The arguments that will be parsed
- * @param args_len The length of arguments to be parsed
- */
-adopt_status_t adopt_parse(
-    adopt_opt *opt,
-    const adopt_spec specs[],
-    char **args,
-    size_t args_len);
 
 /**
  * Prints the status after parsing the most recent argument.  This is

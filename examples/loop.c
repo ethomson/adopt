@@ -7,6 +7,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "adopt.h"
 
@@ -55,8 +56,14 @@ int main(int argc, char **argv)
 	adopt_parser parser;
 	adopt_opt opt;
 	size_t i;
+	unsigned int flags = ADOPT_PARSE_DEFAULT;
 
-	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1);
+	if (getenv("ADOPT_PARSE_GNU") != NULL)
+		flags |= ADOPT_PARSE_GNU;
+	if (getenv("ADOPT_PARSE_FORCE_GNU") != NULL)
+		flags |= ADOPT_PARSE_FORCE_GNU;
+
+	adopt_parser_init(&parser, opt_specs, argv + 1, argc - 1, flags);
 
 	while (adopt_parser_next(&opt, &parser)) {
 		if (opt.status != ADOPT_STATUS_OK) {

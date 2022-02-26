@@ -675,8 +675,8 @@ void test_adopt__parse_arg(void)
 
 void test_adopt__parse_arg_mixed_with_switches(void)
 {
-	int foo = 0;
-	char *bar = NULL, *arg1 = NULL, *arg2 = NULL;
+	int foo = 0, bar = 0;
+	char *arg1 = NULL, *arg2 = NULL;
 	adopt_opt result;
 
 	adopt_spec specs[] = {
@@ -692,7 +692,7 @@ void test_adopt__parse_arg_mixed_with_switches(void)
 	cl_must_pass(adopt_parse(&result, specs, args, 4, ADOPT_PARSE_DEFAULT));
 
 	cl_assert_equal_i('f', foo);
-	cl_assert_equal_p('b', bar);
+	cl_assert_equal_i('b', bar);
 	cl_assert_equal_s("bar", arg1);
 	cl_assert_equal_p("baz", arg2);
 

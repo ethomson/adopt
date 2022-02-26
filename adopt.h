@@ -19,31 +19,37 @@ typedef enum {
 	ADOPT_TYPE_NONE = 0,
 
 	/**
-	 * An argument that, when specified, sets a given value to true.
-	 * This is useful for arguments like "--debug".  A converse
-	 * argument (beginning with "no-") is implicitly specified; for
+	 * An option that, when specified, sets a given value to true.
+	 * This is useful for options like "--debug".  A negation
+	 * option (beginning with "no-") is implicitly specified; for
 	 * example "--no-debug".  The `value` pointer in the returned
 	 * option will be set to `1` when this is specified, and set to
-	 * `0` when the converse "no-" argument is specified.
+	 * `0` when the negation "no-" option is specified.
 	 */
 	ADOPT_TYPE_BOOL,
 
 	/**
-	 * An argument that, when specified, sets the given `value_ptr`
+	 * An option that, when specified, sets the given `value_ptr`
 	 * to the given `value`.
 	 */
 	ADOPT_TYPE_SWITCH,
 
-	/** An argument that has a value ("-nvalue" or "--name value") */
+	/** An option that has a value ("-nvalue" or "--name value") */
 	ADOPT_TYPE_VALUE,
 
-	/** The literal arguments follow specifier, bare "--" */
+	/**
+	 * A bare "--" that indicates that arguments following this are
+	 * literal.  This allows callers to specify things that might
+	 * otherwise look like options, for example to operate on a file
+	 * named "-rf" then you can invoke "program -- -rf" to treat
+	 * "-rf" as an argument not an option.
+	 */
 	ADOPT_TYPE_LITERAL,
 
-	/** A single "free" argument ("path") */
+	/** A single bare argument ("path") */
 	ADOPT_TYPE_ARG,
 
-	/** Unmatched arguments, a collection of "free" arguments ("paths...") */
+	/** Unmatched arguments, a collection of bare arguments ("paths...") */
 	ADOPT_TYPE_ARGS,
 } adopt_type_t;
 

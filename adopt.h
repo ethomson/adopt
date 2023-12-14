@@ -268,8 +268,8 @@ typedef struct adopt_parser {
 	size_t arg_idx;
 	size_t in_args;
 	size_t in_short;
-	int needs_sort : 1,
-	    in_literal : 1;
+	unsigned int needs_sort : 1,
+	             in_literal : 1;
 } adopt_parser;
 
 /**

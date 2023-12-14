@@ -294,6 +294,24 @@ adopt_status_t adopt_parse(
     unsigned int flags);
 
 /**
+ * Quickly executes the given callback for each argument.
+ *
+ * @param specs A NULL-terminated array of `adopt_spec`s that can be parsed
+ * @param args The arguments that will be parsed
+ * @param args_len The length of arguments to be parsed
+ * @param flags The `adopt_flag_t flags for parsing
+ * @param callback The callback to invoke for each specified option
+ * @param callback_data Data to be provided to the callback
+ */
+int adopt_foreach(
+	const adopt_spec specs[],
+	char **args,
+	size_t args_len,
+	unsigned int flags,
+	int (*callback)(adopt_opt *, void *),
+	void *callback_data);
+
+/**
  * Initializes a parser that parses the given arguments according to the
  * given specifications.
  *

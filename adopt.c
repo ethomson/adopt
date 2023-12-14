@@ -573,6 +573,28 @@ adopt_status_t adopt_parse(
 	return validate_required(opt, specs, given_specs);
 }
 
+int adopt_foreach(
+	const adopt_spec specs[],
+	char **args,
+	size_t args_len,
+	unsigned int flags,
+	int (*callback)(adopt_opt *, void *),
+	void *callback_data)
+{
+	adopt_parser parser;
+	adopt_opt opt;
+	int ret;
+
+	adopt_parser_init(&parser, specs, args, args_len, flags);
+
+	while (adopt_parser_next(&opt, &parser)) {
+		if ((ret = callback(&opt, callback_data)) != 0)
+			return ret;
+	}
+
+	return 0;
+}
+
 static int spec_name_fprint(FILE *file, const adopt_spec *spec)
 {
 	int error;

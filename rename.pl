@@ -123,7 +123,7 @@ sub translate {
 
 	if ($inline) {
 		$contents =~ s/^INLINE/${inline}/mg;
-		$contents =~ s/\n#ifdef _MSC_VER\n.*?\n#endif\n//sg;
+		$contents =~ s/\n#ifdef _MSC_VER\n.*?\n#endif\n//s;
 	}
 
 	if ($tests) {

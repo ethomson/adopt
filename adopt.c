@@ -71,7 +71,7 @@ INLINE(const adopt_spec *) spec_for_long(
 
 		/* Handle --option=value arguments */
 		if (spec->type == ADOPT_TYPE_VALUE &&
-		    eql &&
+		    spec->name && eql &&
 		    strncmp(arg, spec->name, eql_pos) == 0 &&
 		    spec->name[eql_pos] == '\0') {
 			*has_value = 1;

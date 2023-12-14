@@ -636,7 +636,7 @@ int adopt_status_fprint(
 		if ((error = fprintf(file, "argument '")) < 0 ||
 		    (error = spec_name_fprint(file, opt->spec)) < 0 ||
 		    (error = fprintf(file, "' requires a value.\n")) < 0)
-			;
+			break;
 		break;
 	case ADOPT_STATUS_MISSING_ARGUMENT:
 		if (spec_is_choice(opt->spec)) {

@@ -268,7 +268,9 @@ static adopt_status_t parse_short(adopt_opt *opt, adopt_parser *parser)
 	}
 
 	/* Required argument was not provided */
-	if (spec->type == ADOPT_TYPE_VALUE && !opt->value)
+	if (spec->type == ADOPT_TYPE_VALUE &&
+        !opt->value &&
+	    !(spec->usage & ADOPT_USAGE_VALUE_OPTIONAL))
 		opt->status = ADOPT_STATUS_MISSING_VALUE;
 	else
 		opt->status = ADOPT_STATUS_OK;
